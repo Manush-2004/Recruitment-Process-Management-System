@@ -1,0 +1,71 @@
+using Microsoft.AspNetCore.Mvc;
+using RecruitmentSystemAPI.Models;
+using RecruitmentSystemAPI.Services;
+
+namespace RecruitmentSystemAPI.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class CandidatesController : ControllerBase
+{
+    private readonly ICandidateService _service;
+
+    private readonly ILogger<CandidatesController> _logger;
+
+    public CandidatesController(ICandidateService service, ILogger<CandidatesController> logger)
+    {
+        _service = service;
+        _logger = logger;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Candidate>>> GetAll()
+    {
+        var list = await _service.GetAllAsync();
+        return Ok(list);
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<Candidate>> Get(int id)
+    {
+        var cand = await _service.GetAsync(id);
+        if (cand == null) return NotFound();
+        return Ok(cand);
+    }
+
+    // Accept multipart/form-data: fields + file ("cv")
+    [HttpPost]
+    [RequestSizeLimit(20_000_000)] // 20MB limit (adjust as needed)
+    public async Task<IActionResult> Create([FromForm] string fullName, [FromForm] string email, [FromForm] string? phone, [FromForm] IFormFile? cv)
+    {
+        if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email))
+            return BadRequest("FullName and Email are required.");
+        var dto = new CreateCandidateRequest(fullName, email, phone);
+        try
+        {
+            var candidate = await _service.CreateCandidateAsync(dto, cv);
+            return CreatedAtAction(nameof(Get), new { id = candidate.Id }, candidate);
+        }
+        catch (ArgumentException aex)
+        {
+            _logger.LogWarning(aex, "Validation error creating candidate");
+            return BadRequest(aex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error creating candidate");
+            // return a generic problem response to the client
+            return Problem(detail: "An unexpected error occurred while creating the candidate.", statusCode: 500);
+        }
+    }
+
+    [HttpPost("bulk")]
+    [RequestSizeLimit(50_000_000)]
+    public async Task<IActionResult> Bulk([FromForm] IFormFile file)
+    {
+        if (file == null) return BadRequest("File is required");
+        var result = await _service.BulkUploadFromExcelAsync(file);
+        return Ok(result);
+    }
+
+}    
