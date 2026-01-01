@@ -1,0 +1,80 @@
+# .gitignore for Recruitment System repo
+# Project-specific ignores only: frontend = recruitment-system, backend = RecruitmentSystemAPI
+
+# -------------------------
+# OS files
+# -------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# -------------------------
+# Frontend: recruitment-system (Vite / Node)
+# -------------------------
+# Dependencies
+/recruitment-system/node_modules/
+
+# Build outputs (Vite)
+/recruitment-system/dist/
+/recruitment-system/.vite/
+
+# Local env files (keep examples tracked)
+/recruitment-system/.env
+/recruitment-system/.env.local
+/recruitment-system/.env.*.local
+
+# TypeScript cache (if used)
+/recruitment-system/*.tsbuildinfo
+
+# Test / coverage (if generated locally)
+/recruitment-system/coverage/
+/recruitment-system/.nyc_output/
+
+# Local debug logs
+/recruitment-system/npm-debug.log*
+/recruitment-system/yarn-error.log*
+/recruitment-system/pnpm-debug.log*
+
+# -------------------------
+# Backend: RecruitmentSystemAPI (.NET)
+# -------------------------
+# Build artifacts (per-project)
+/RecruitmentSystemAPI/bin/
+/RecruitmentSystemAPI/obj/
+/RecruitmentSystemAPI/**/bin/
+/RecruitmentSystemAPI/**/obj/
+
+# User-specific Visual Studio data (ignore if present per-project)
+/RecruitmentSystemAPI/.vs/
+*.user
+*.suo
+
+# Development secrets (specific file present in this project)
+/RecruitmentSystemAPI/appsettings.Development.json
+
+# Uploaded or generated static files (don't track uploads)
+/RecruitmentSystemAPI/wwwroot/uploads/
+
+# Logs, local DBs, and test results (project-scoped)
+/RecruitmentSystemAPI/*.log
+/RecruitmentSystemAPI/*.mdf
+/RecruitmentSystemAPI/*.ldf
+/RecruitmentSystemAPI/*.db
+/RecruitmentSystemAPI/TestResults/
+
+# NuGet / artifacts produced by builds for this project
+/RecruitmentSystemAPI/*.nupkg
+/RecruitmentSystemAPI/packages/
+/RecruitmentSystemAPI/artifacts/
+
+# -------------------------
+# Editors (workspace-level; optional)
+# -------------------------
+.vscode/
+.idea/
+
+# Editor temp files
+*.swp
+*~
+
+# End of file
