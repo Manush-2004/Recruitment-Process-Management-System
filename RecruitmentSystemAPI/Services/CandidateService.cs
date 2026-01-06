@@ -82,7 +82,87 @@ public class CandidateService : ICandidateService
 
     public async Task<Candidate?> GetAsync(int id)
     {
-        return await _db.Candidates.Include(c => c.Documents).FirstOrDefaultAsync(c => c.Id == id);
+        return await _db.Candidates
+                        .Include(c => c.Documents)
+                        .Include(c => c.Skills)
+                        .Include(c => c.CandidateJobs)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(c => c.Id == id);
+    }
+
+    public async Task<Candidate?> GetByEmailAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return null;
+        return await _db.Candidates
+                        .Include(c => c.Documents)
+                        .Include(c => c.Skills)
+                        .Include(c => c.CandidateJobs)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(c => c.Email == email);
+    }
+
+    public async Task<IEnumerable<Interview>> GetInterviewsForCandidateAsync(int candidateId)
+    {
+        return await _db.Interviews
+                        .Include(i => i.Interviewers)
+                        .Include(i => i.Job)
+                        .Where(i => i.CandidateId == candidateId)
+                        .OrderBy(i => i.ScheduledAt)
+                        .AsNoTracking()
+                        .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Offer>> GetOffersForCandidateAsync(int candidateId)
+    {
+        return await _db.Offers
+                        .Where(o => o.CandidateId == candidateId)
+                        .OrderByDescending(o => o.CreatedAt)
+                        .AsNoTracking()
+                        .ToListAsync();
+    }
+
+    public async Task<IEnumerable<StatusHistory>> GetStatusHistoryForCandidateAsync(int candidateId)
+    {
+        return await _db.StatusHistories
+                        .Where(s => s.CandidateId == candidateId)
+                        .OrderByDescending(s => s.Id)
+                        .AsNoTracking()
+                        .ToListAsync();
+    }
+
+    public async Task<CandidateDocument> UploadDocumentAsync(int candidateId, IFormFile file, CancellationToken ct = default)
+    {
+        if (file == null || file.Length == 0) throw new ArgumentException("File is required");
+
+        var candidate = await _db.Candidates.FindAsync(new object[] { candidateId }, ct);
+        if (candidate == null) throw new ArgumentException("Candidate not found");
+
+        var uploadsRoot = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads", "documents", candidateId.ToString());
+        Directory.CreateDirectory(uploadsRoot);
+
+        var safeFileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+        var filePath = Path.Combine(uploadsRoot, safeFileName);
+
+        using (var stream = File.Create(filePath))
+        {
+            await file.CopyToAsync(stream, ct);
+        }
+
+        var relativePath = Path.Combine("uploads", "documents", candidateId.ToString(), safeFileName).Replace("\\", "/");
+
+        var doc = new CandidateDocument
+        {
+            CandidateId = candidateId,
+            FileName = file.FileName,
+            FilePath = "/" + relativePath,
+            ContentType = file.ContentType ?? "application/octet-stream",
+            Size = file.Length
+        };
+
+        _db.CandidateDocuments.Add(doc);
+        await _db.SaveChangesAsync(ct);
+
+        return doc;
     }
 
     public async Task<BulkUploadResult> BulkUploadFromExcelAsync(IFormFile excelFile, CancellationToken ct = default)

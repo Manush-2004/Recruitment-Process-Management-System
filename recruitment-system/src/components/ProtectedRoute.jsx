@@ -6,11 +6,20 @@ import { useAuth } from '../contexts/AuthContext';
  * Wraps routes that require authentication
  * Redirects to login if user is not authenticated
  */
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+const ProtectedRoute = ({ children, roles }) => {
+  const { isAuthenticated, user } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (roles && roles.length > 0) {
+    const userRoles = user?.roles || [];
+    const allowed = roles.some((r) => userRoles.includes(r));
+    if (!allowed) {
+      // Not authorized for this role
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return children;

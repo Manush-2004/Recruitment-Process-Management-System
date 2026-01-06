@@ -47,7 +47,7 @@ const EyeOffIcon = ({ className }) => (
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated, loading, error, clearError } = useAuth();
+  const { login, isAuthenticated, loading, error, clearError, hasRole } = useAuth();
   
   const [formData, setFormData] = useState({
     Email: '',
@@ -60,9 +60,14 @@ const LoginPage = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+      // If candidate, redirect to candidate dashboard
+      if (hasRole && hasRole('Candidate')) {
+        navigate('/candidate/dashboard', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, hasRole]);
 
   // Clear errors when component mounts
   useEffect(() => {
@@ -120,7 +125,8 @@ const LoginPage = () => {
     });
 
     if (result.success) {
-      navigate('/dashboard', { replace: true });
+      if (hasRole && hasRole('Candidate')) navigate('/candidate/dashboard', { replace: true });
+      else navigate('/dashboard', { replace: true });
     }
   };
 

@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../contexts/NotificationContext';
 
 /**
  * NavigationBar Component
  * Sticky top navigation following design system specifications
  */
 const NavigationBar = () => {
-  const { logout, isAuthenticated } = useAuth();
+  const { logout, isAuthenticated, hasRole, user } = useAuth();
+  const { unread, markAllRead } = useNotifications();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -29,12 +31,40 @@ const NavigationBar = () => {
         {/* Right: Auth Actions */}
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
-            <button
-              onClick={handleLogout}
-              className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-            >
-              Logout
-            </button>
+            <>
+              {/* Candidate quick links */}
+              {hasRole && hasRole('Candidate') && (
+                <div className="hidden sm:flex items-center gap-3">
+                  <Link to="/candidate/dashboard" className="text-sm text-gray-700 hover:text-gray-900">Dashboard</Link>
+                  <Link to="/candidate/profile" className="text-sm text-gray-700 hover:text-gray-900">Profile</Link>
+                  <Link to="/candidate/interviews" className="text-sm text-gray-700 hover:text-gray-900">Interviews</Link>
+                  <Link to="/candidate/offers" className="text-sm text-gray-700 hover:text-gray-900">Offers</Link>
+                </div>
+              )}
+
+              {/* Notification badge */}
+              <div className="relative">
+                <button onClick={() => { markAllRead(); navigate('/candidate/notifications'); }} className="text-sm text-gray-700 hover:text-gray-900">
+                  Notifications
+                </button>
+                {unread > 0 && (
+                  <span className="absolute -top-1 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">{unread}</span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Link to="/candidate/profile" className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">{(user?.fullName || user?.FullName || user?.email || user?.Email || '').split(' ')[0]?.[0] ?? 'U'}</div>
+                  <span className="hidden sm:inline text-sm text-gray-700">{user?.fullName ?? user?.FullName ?? user?.email ?? user?.Email}</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            </>
           ) : (
             <>
               <Link

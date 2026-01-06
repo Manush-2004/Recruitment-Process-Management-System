@@ -15,6 +15,11 @@ ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Ensure console logging and capture debug logs to diagnose startup failures
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug);
+
 builder.Services.AddControllers()
     .AddJsonOptions(opts =>
     {
@@ -62,6 +67,11 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<StatusService>();
 
+// Diagnostic hosted service to help debug lifecycle events
+builder.Services.AddHostedService<DiagnosticHostedService>();
+// Startup probe: check DI resolution and DB connectivity at startup
+builder.Services.AddHostedService<StartupProbeHostedService>();
+
 
 
 
@@ -77,6 +87,19 @@ builder.Services.AddCors(opt =>
 
 var app = builder.Build();
 
+// Add global exception handlers and application lifecycle logs to capture unexpected shutdown causes
+AppDomain.CurrentDomain.UnhandledException += (s, e) => Console.WriteLine($"UnhandledException: {e.ExceptionObject}");
+TaskScheduler.UnobservedTaskException += (s, e) => Console.WriteLine($"UnobservedTaskException: {e.Exception}");
+app.Lifetime.ApplicationStopping.Register(() => {
+    Console.WriteLine("Application is stopping (ApplicationStopping event fired). StackTrace:\n" + Environment.StackTrace);
+    try
+    {
+        Console.WriteLine($"Process Id: {System.Diagnostics.Process.GetCurrentProcess().Id}");
+    }
+    catch {}
+});
+app.Lifetime.ApplicationStopped.Register(() => Console.WriteLine("Application has stopped (ApplicationStopped event fired)."));
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -87,4 +110,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
-app.Run();
+
+try
+{
+    app.Run();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Host run exception: {ex}");
+    throw;
+}

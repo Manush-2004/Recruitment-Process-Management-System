@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.Services;
 
@@ -31,6 +33,80 @@ public class CandidatesController : ControllerBase
         var cand = await _service.GetAsync(id);
         if (cand == null) return NotFound();
         return Ok(cand);
+    }
+
+    // Returns the authenticated candidate's profile
+    [HttpGet("me")]
+    [Authorize(Roles = "Candidate")]
+    public async Task<ActionResult<Candidate>> Me()
+    {
+        var email = User.FindFirst(ClaimTypes.Name)?.Value;
+        if (string.IsNullOrWhiteSpace(email)) return Unauthorized();
+        var cand = await _service.GetByEmailAsync(email);
+        if (cand == null) return NotFound();
+        return Ok(cand);
+    }
+
+    // Candidate's interviews
+    [HttpGet("me/interviews")]
+    [Authorize(Roles = "Candidate")]
+    public async Task<ActionResult<IEnumerable<Interview>>> MyInterviews()
+    {
+        var email = User.FindFirst(ClaimTypes.Name)?.Value;
+        if (string.IsNullOrWhiteSpace(email)) return Unauthorized();
+        var cand = await _service.GetByEmailAsync(email);
+        if (cand == null) return NotFound();
+        var interviews = await _service.GetInterviewsForCandidateAsync(cand.Id);
+        return Ok(interviews);
+    }
+
+    // Candidate's offers
+    [HttpGet("me/offers")]
+    [Authorize(Roles = "Candidate")]
+    public async Task<ActionResult<IEnumerable<Offer>>> MyOffers()
+    {
+        var email = User.FindFirst(ClaimTypes.Name)?.Value;
+        if (string.IsNullOrWhiteSpace(email)) return Unauthorized();
+        var cand = await _service.GetByEmailAsync(email);
+        if (cand == null) return NotFound();
+        var offers = await _service.GetOffersForCandidateAsync(cand.Id);
+        return Ok(offers);
+    }
+
+    // Candidate's status history
+    [HttpGet("me/status-history")]
+    [Authorize(Roles = "Candidate")]
+    public async Task<ActionResult<IEnumerable<StatusHistory>>> MyStatusHistory()
+    {
+        var email = User.FindFirst(ClaimTypes.Name)?.Value;
+        if (string.IsNullOrWhiteSpace(email)) return Unauthorized();
+        var cand = await _service.GetByEmailAsync(email);
+        if (cand == null) return NotFound();
+        var history = await _service.GetStatusHistoryForCandidateAsync(cand.Id);
+        return Ok(history);
+    }
+
+    // Upload document for authenticated candidate
+    [HttpPost("me/documents")]
+    [Authorize(Roles = "Candidate")]
+    [RequestSizeLimit(20_000_000)]
+    public async Task<IActionResult> UploadDocument([FromForm] IFormFile file)
+    {
+        if (file == null) return BadRequest("File is required");
+        var email = User.FindFirst(ClaimTypes.Name)?.Value;
+        if (string.IsNullOrWhiteSpace(email)) return Unauthorized();
+        var cand = await _service.GetByEmailAsync(email);
+        if (cand == null) return NotFound();
+        try
+        {
+            var doc = await _service.UploadDocumentAsync(cand.Id, file);
+            return CreatedAtAction(nameof(Get), new { id = cand.Id }, doc);
+        }
+        catch (ArgumentException aex)
+        {
+            _logger.LogWarning(aex, "Validation error uploading document");
+            return BadRequest(aex.Message);
+        }
     }
 
     // Accept multipart/form-data: fields + file ("cv")

@@ -3,7 +3,7 @@
  * 4-column grid with analytics cards
  */
 
-const AnalyticsCard = ({ icon, value, label, trend, trendValue, iconBg }) => {
+const AnalyticsCard = ({ icon, value, label, trend, iconBg }) => {
   return (
     <div className="bg-white rounded-[14px] p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
       <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${iconBg}`}>

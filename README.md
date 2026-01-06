@@ -78,4 +78,14 @@ Notes:
 
 ---
 
-If you'd like, I can add a short `.env.example` or `README` sections for running migrations, seeding data, or CI steps. Let me know which you'd prefer next.
+## Tests & developer helpers 🧪
+We keep lightweight test helpers and a mock server in the `test/` folder to aid development and CI checks.
+
+- `test/test-e2e.cjs` — Real E2E script that runs against a running backend (may require a DB) ✅
+- `test/mock-server/` — Quick Express mock to run frontend flows locally ✅
+- `test/frontend-flow-test.mjs` — Mocked frontend tests using `axios-mock-adapter` ✅
+- `test/wait-and-run-real-e2e.cjs` — Poll helper that waits for the backend and then runs the real E2E script ✅
+- `test/scripts/testCandidateAuth.js` — Simple fetch-based script for manual auth checks ✅
+
+---
+
