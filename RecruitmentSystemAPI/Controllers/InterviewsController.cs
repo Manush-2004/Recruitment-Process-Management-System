@@ -15,6 +15,13 @@ public class InterviewsController : ControllerBase
         _service = service;
     }
 
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Interview>>> GetAll()
+    {
+        var list = await _service.GetAllAsync();
+        return Ok(list);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Schedule(InterviewRequest request)
     {

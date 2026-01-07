@@ -12,6 +12,15 @@ import CandidateInterviews from './pages/candidate/CandidateInterviews';
 import CandidateDocuments from './pages/candidate/CandidateDocuments';
 import CandidateOffers from './pages/candidate/CandidateOffers';
 import CandidateNotifications from './pages/candidate/CandidateNotifications';
+import RecruiterDashboard from './pages/recruiter/RecruiterDashboard';
+import JobsPage from './pages/recruiter/JobsPage';
+import JobCandidates from './pages/recruiter/JobCandidates';
+import CandidatesPage from './pages/recruiter/CandidatesPage';
+import ScreeningPage from './pages/recruiter/ScreeningPage';
+import InterviewScheduling from './pages/recruiter/InterviewScheduling';
+import OfferManagement from './pages/recruiter/OfferManagement';
+import RecruiterCandidate from './pages/recruiter/RecruiterCandidate';
+import NotificationsPage from './pages/Notifications';
 
 function App() {
   return (
@@ -39,7 +48,20 @@ function App() {
           <Route path="/candidate/documents" element={<ProtectedRoute roles={["Candidate"]}><CandidateDocuments/></ProtectedRoute>} />
           <Route path="/candidate/offers" element={<ProtectedRoute roles={["Candidate"]}><CandidateOffers/></ProtectedRoute>} />
           <Route path="/candidate/notifications" element={<ProtectedRoute roles={["Candidate"]}><CandidateNotifications/></ProtectedRoute>} />
-          
+
+          {/* Recruiter routes */}
+          <Route path="/recruiter/dashboard" element={<ProtectedRoute roles={["Recruiter"]}><RecruiterDashboard/></ProtectedRoute>} />
+          <Route path="/recruiter/jobs" element={<ProtectedRoute roles={["Recruiter"]}><JobsPage/></ProtectedRoute>} />
+          <Route path="/recruiter/job/:id/candidates" element={<ProtectedRoute roles={["Recruiter"]}><JobCandidates/></ProtectedRoute>} />
+          <Route path="/recruiter/candidates" element={<ProtectedRoute roles={["Recruiter"]}><CandidatesPage/></ProtectedRoute>} />
+          <Route path="/recruiter/screening" element={<ProtectedRoute roles={["Recruiter"]}><ScreeningPage/></ProtectedRoute>} />
+          <Route path="/recruiter/interviews" element={<ProtectedRoute roles={["Recruiter"]}><InterviewScheduling/></ProtectedRoute>} />
+          <Route path="/recruiter/offers" element={<ProtectedRoute roles={["Recruiter"]}><OfferManagement/></ProtectedRoute>} />
+          <Route path="/recruiter/candidate/:id" element={<ProtectedRoute roles={["Recruiter"]}><RecruiterCandidate/></ProtectedRoute>} />
+
+          {/* Notifications (any authenticated user) */}
+          <Route path="/notifications" element={<ProtectedRoute><NotificationsPage/></ProtectedRoute>} />
+
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           

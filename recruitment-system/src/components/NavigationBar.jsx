@@ -42,9 +42,21 @@ const NavigationBar = () => {
                 </div>
               )}
 
+              {/* Recruiter quick links */}
+              {hasRole && hasRole('Recruiter') && (
+                <div className="hidden sm:flex items-center gap-3">
+                  <Link to="/recruiter/dashboard" className="text-sm text-gray-700 hover:text-gray-900">Dashboard</Link>
+                  <Link to="/recruiter/jobs" className="text-sm text-gray-700 hover:text-gray-900">Jobs</Link>
+                  <Link to="/recruiter/candidates" className="text-sm text-gray-700 hover:text-gray-900">Candidates</Link>
+                  <Link to="/recruiter/screening" className="text-sm text-gray-700 hover:text-gray-900">Screening</Link>
+                  <Link to="/recruiter/interviews" className="text-sm text-gray-700 hover:text-gray-900">Interviews</Link>
+                  <Link to="/recruiter/offers" className="text-sm text-gray-700 hover:text-gray-900">Offers</Link>                  
+                </div>
+              )}
+
               {/* Notification badge */}
               <div className="relative">
-                <button onClick={() => { markAllRead(); navigate('/candidate/notifications'); }} className="text-sm text-gray-700 hover:text-gray-900">
+                <button onClick={() => { markAllRead(); navigate('/notifications'); }} className="text-sm text-gray-700 hover:text-gray-900">
                   Notifications
                 </button>
                 {unread > 0 && (

@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
+import { API_BASE_URL } from '../config/apiRoutes.js';
 
 const NotificationContext = createContext(null);
 
@@ -10,8 +11,11 @@ export const NotificationProvider = ({ children }) => {
   const connectionRef = useRef(null);
 
   useEffect(() => {
+    // Use absolute hub URL so client works regardless of how frontend is served (localhost vs IP)
+    const hubUrl = new URL('/hubs/notifications', API_BASE_URL).href;
+
     const conn = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/notifications')
+      .withUrl(hubUrl)
       .withAutomaticReconnect()
       .build();
 
@@ -20,9 +24,23 @@ export const NotificationProvider = ({ children }) => {
       setUnread((u) => u + 1);
     });
 
-    conn.start().catch((e) => console.error('SignalR start failed', e));
+    // Start with simple retry/backoff so transient network changes don't leave the app blank
+    let attempts = 0;
+    const startWithRetry = async () => {
+      attempts += 1;
+      try {
+        await conn.start();
+        connectionRef.current = conn;
+      } catch (err) {
+        console.warn('SignalR start failed (attempt ' + attempts + ')', err);
+        if (attempts < 6) {
+          const delay = Math.min(3000 * attempts, 15000);
+          setTimeout(startWithRetry, delay);
+        }
+      }
+    };
 
-    connectionRef.current = conn;
+    startWithRetry();
 
     return () => {
       conn.stop().catch(() => {});

@@ -24,7 +24,7 @@ A simple recruitment management system split into a frontend (recruitment-system
 **What’s implemented**
 - Authentication UI: **Signup** and **Login** pages
 - Basic **Dashboard** page and protected routes handled via an Auth context
-- Client services for API calls (`axios`) and SignalR client for notifications
+- Client services for API calls (`axios`) and SignalR client for notifications. Improvements: HMR and SignalR startup now include stability fixes (watch polling and retry/backoff) to reduce `net::ERR_NETWORK_CHANGED` errors in dev.
 - Project scaffold with components, pages, and routes
 
 **How to run locally**

@@ -14,6 +14,14 @@ public class OffersController : ControllerBase
         _service = service;
     }
 
+    [HttpGet]
+    [Authorize(Roles = "Recruiter,HR")]
+    public async Task<ActionResult<IEnumerable<Offer>>> GetAll()
+    {
+        var list = await _service.GetAllAsync();
+        return Ok(list);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(OfferRequest req)
     {

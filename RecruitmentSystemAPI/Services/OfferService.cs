@@ -3,6 +3,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using RecruitmentSystemAPI.Data;
 using RecruitmentSystemAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 public class OfferService
 {
@@ -60,5 +61,14 @@ public class OfferService
         );
 
         return offer;
+    }
+
+    public async Task<IEnumerable<Offer>> GetAllAsync()
+    {
+        return await _db.Offers
+                        .Include(o => o.Candidate)
+                        .OrderByDescending(o => o.CreatedAt)
+                        .AsNoTracking()
+                        .ToListAsync();
     }
 }

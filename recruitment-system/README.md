@@ -10,3 +10,22 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
+<!-- ## Recruiter pages (new)
+This project now includes a basic **Recruiter** UI under `src/pages/recruiter/` implementing:
+
+- `RecruiterDashboard` — quick metrics and live notifications
+- `JobsPage` (+ `JobForm`) — create/update/delete jobs and manage required skills
+- `JobCandidates` — view auto-linked candidates and skill-match visualization
+- `CandidatesPage` — create candidate (multipart), upload CV, and bulk Excel upload
+- `ScreeningPage` — assign reviewer, approve skills, and set screening status. Accessible from the recruiter navigation menu and from `Assign Screening` actions on the Jobs / Candidates lists; the page supports pre-filling candidate and job via query parameters (e.g. `/recruiter/screening?candidateId=123&jobId=456`).
+- `InterviewScheduling` — schedule interviews with panel support
+- `OfferManagement` — fetch interview summaries and initiate offer requests (HR-only endpoints may reject creation)
+
+Dev helper: `test/frontend-recruiter-flow-test.mjs` — a small mocked test verifying the recruiter API client (run with `node test/frontend-recruiter-flow-test.mjs`).
+
+Notes:
+- Routes are protected with role-based checks; only users with the `Recruiter` role can access `/recruiter/*` routes.
+- SignalR notifications are available via the shared `NotificationContext` and shown in the dashboard.
+- Some backend endpoints (e.g., global interviews or offers listing) are not available; UI will show a placeholder when counts are not computable. -->
