@@ -22,6 +22,11 @@ import OfferManagement from './pages/recruiter/OfferManagement';
 import RecruiterCandidate from './pages/recruiter/RecruiterCandidate';
 import NotificationsPage from './pages/Notifications';
 
+// Reviewer pages
+import ReviewerDashboard from './pages/reviewer/ReviewerDashboard';
+import ReviewerScreening from './pages/reviewer/ScreeningPage';
+import ScreeningHistory from './pages/reviewer/ScreeningHistory';
+
 function App() {
   return (
     <AuthProvider>
@@ -58,6 +63,11 @@ function App() {
           <Route path="/recruiter/interviews" element={<ProtectedRoute roles={["Recruiter"]}><InterviewScheduling/></ProtectedRoute>} />
           <Route path="/recruiter/offers" element={<ProtectedRoute roles={["Recruiter"]}><OfferManagement/></ProtectedRoute>} />
           <Route path="/recruiter/candidate/:id" element={<ProtectedRoute roles={["Recruiter"]}><RecruiterCandidate/></ProtectedRoute>} />
+
+          {/* Reviewer routes */}
+          <Route path="/reviewer/dashboard" element={<ProtectedRoute roles={["Reviewer"]}><ReviewerDashboard/></ProtectedRoute>} />
+          <Route path="/reviewer/screening" element={<ProtectedRoute roles={["Reviewer"]}><ReviewerScreening/></ProtectedRoute>} />
+          <Route path="/reviewer/history" element={<ProtectedRoute roles={["Reviewer"]}><ScreeningHistory/></ProtectedRoute>} />
 
           {/* Notifications (any authenticated user) */}
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage/></ProtectedRoute>} />

@@ -20,6 +20,16 @@ This project now includes a basic **Recruiter** UI under `src/pages/recruiter/` 
 - `JobCandidates` — view auto-linked candidates and skill-match visualization
 - `CandidatesPage` — create candidate (multipart), upload CV, and bulk Excel upload
 - `ScreeningPage` — assign reviewer, approve skills, and set screening status. Accessible from the recruiter navigation menu and from `Assign Screening` actions on the Jobs / Candidates lists; the page supports pre-filling candidate and job via query parameters (e.g. `/recruiter/screening?candidateId=123&jobId=456`).
+
+Reviewer role pages (new):
+- `ReviewerDashboard` — assigned screenings and quick actions
+- `Reviewer Screening` — view candidate CV, skill-by-skill evaluation, experience input, comments, and submit screening (validated and restricted to `Reviewer` role)
+- `ScreeningHistory` — past screenings submitted by the reviewer with status audit trail
+
+Security & validation:
+- `Reviewer` routes are protected via `ProtectedRoute` and require the `Reviewer` role
+- Duplicate screening checks are performed via `/api/screenings/check` before submission
+- Status-based validation (e.g., `Shortlisted` requires at least one approved skill) is enforced client-side
 - `InterviewScheduling` — schedule interviews with panel support
 - `OfferManagement` — fetch interview summaries and initiate offer requests (HR-only endpoints may reject creation)
 

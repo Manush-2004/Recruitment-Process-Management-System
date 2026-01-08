@@ -46,7 +46,7 @@ Notes:
 - JWT authentication, SignalR for real-time notifications, Swashbuckle/Swagger for API docs
 
 **What’s implemented**
-- Controllers: `AuthController`, `JobsController`, `CandidatesController`, `InterviewsController`, `FeedbackController`, `OffersController`, `ScreeningsController`
+- Controllers: `AuthController`, `JobsController`, `CandidatesController`, `InterviewsController`, `FeedbackController`, `OffersController`, `ScreeningsController` — screening endpoints now include reviewer-focused reads (`/api/screenings/assigned`, `/api/screenings/history`, `/api/screenings/for-candidate`, `/api/screenings/check`) and the reviewer-only `POST /api/screenings` for submit.
 - Services for business logic (e.g., `AuthService`, `CandidateService`, `OfferService`, `NotificationService`)
 - SignalR hub: `NotificationHub`
 - EF Core Migrations present (see `Migrations/` folder)

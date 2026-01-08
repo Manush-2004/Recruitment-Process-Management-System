@@ -52,4 +52,39 @@ public class ScreeningService : IScreeningService
 
         return screening;
     }
+
+    public async Task<IEnumerable<Screening>> GetAssignedForReviewerAsync(string reviewerName)
+    {
+        return await _db.Screenings
+            .Where(s => s.ReviewerName == reviewerName && s.Status == "Pending")
+            .Include(s => s.Candidate)
+            .Include(s => s.Job)
+            .Include(s => s.Skills)
+            .OrderBy(s => s.ScreenedAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Screening>> GetHistoryForReviewerAsync(string reviewerName)
+    {
+        return await _db.Screenings
+            .Where(s => s.ReviewerName == reviewerName && s.ScreenedAt != null)
+            .Include(s => s.Candidate)
+            .Include(s => s.Job)
+            .Include(s => s.Skills)
+            .OrderByDescending(s => s.ScreenedAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Screening>> GetForCandidateAsync(int candidateId)
+    {
+        return await _db.Screenings
+            .Where(s => s.CandidateId == candidateId)
+            .Include(s => s.Job)
+            .Include(s => s.Skills)
+            .OrderByDescending(s => s.ScreenedAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
 }
