@@ -18,6 +18,13 @@ public class FeedbackService : IFeedbackService
                            f.InterviewerUserId == interviewerUserId);
     }
 
+    public async Task<bool> HasSubmittedByEmailAsync(int interviewId, string email)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (user == null) return false;
+        return await HasSubmittedAsync(interviewId, user.Id);
+    }
+
     public async Task SubmitFeedbackAsync(FeedbackRequest req)
     {
         if (await HasSubmittedAsync(req.InterviewId, req.InterviewerUserId))

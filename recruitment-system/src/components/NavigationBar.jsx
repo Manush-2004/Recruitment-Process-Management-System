@@ -61,6 +61,15 @@ const NavigationBar = () => {
                   <Link to="/reviewer/history" className="text-sm text-gray-700 hover:text-gray-900">History</Link>
                 </div>
               )}
+
+              {/* Interviewer quick links */}
+              {hasRole && hasRole('Interviewer') && (
+                <div className="hidden sm:flex items-center gap-3">
+                  <Link to="/interviewer/dashboard" className="text-sm text-gray-700 hover:text-gray-900">Dashboard</Link>
+                  <Link to="/interviewer/dashboard" className="text-sm text-gray-700 hover:text-gray-900">Interviews</Link>
+                  <Link to="/interviewer/dashboard" className="text-sm text-gray-700 hover:text-gray-900">Feedback</Link>
+                </div>
+              )}
               {/* Notification badge */}
               <div className="relative">
                 <button onClick={() => { markAllRead(); navigate('/notifications'); }} className="text-sm text-gray-700 hover:text-gray-900">

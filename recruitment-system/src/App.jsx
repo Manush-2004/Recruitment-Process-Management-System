@@ -27,6 +27,11 @@ import ReviewerDashboard from './pages/reviewer/ReviewerDashboard';
 import ReviewerScreening from './pages/reviewer/ScreeningPage';
 import ScreeningHistory from './pages/reviewer/ScreeningHistory';
 
+// Interviewer pages
+import InterviewerDashboard from './pages/interviewer/InterviewerDashboard';
+import InterviewDetails from './pages/interviewer/InterviewDetails';
+import FeedbackPage from './pages/interviewer/FeedbackPage';
+
 function App() {
   return (
     <AuthProvider>
@@ -68,6 +73,11 @@ function App() {
           <Route path="/reviewer/dashboard" element={<ProtectedRoute roles={["Reviewer"]}><ReviewerDashboard/></ProtectedRoute>} />
           <Route path="/reviewer/screening" element={<ProtectedRoute roles={["Reviewer"]}><ReviewerScreening/></ProtectedRoute>} />
           <Route path="/reviewer/history" element={<ProtectedRoute roles={["Reviewer"]}><ScreeningHistory/></ProtectedRoute>} />
+
+          {/* Interviewer routes */}
+          <Route path="/interviewer/dashboard" element={<ProtectedRoute roles={["Interviewer"]}><InterviewerDashboard/></ProtectedRoute>} />
+          <Route path="/interviewer/interview/:id" element={<ProtectedRoute roles={["Interviewer"]}><InterviewDetails/></ProtectedRoute>} />
+          <Route path="/interviewer/feedback/:id" element={<ProtectedRoute roles={["Interviewer"]}><FeedbackPage/></ProtectedRoute>} />
 
           {/* Notifications (any authenticated user) */}
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage/></ProtectedRoute>} />

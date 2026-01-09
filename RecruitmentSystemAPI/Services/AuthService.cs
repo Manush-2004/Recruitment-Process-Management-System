@@ -53,6 +53,11 @@ public class AuthService : IAuthService
         return GenerateToken(user);
     }
 
+    public async Task<User?> GetUserByEmailAsync(string email)
+    {
+        return await _db.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Email == email);
+    }
+
     private string GenerateToken(User user)
     {
         var claims = new List<Claim>
