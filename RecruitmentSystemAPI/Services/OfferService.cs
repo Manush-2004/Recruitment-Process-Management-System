@@ -28,6 +28,9 @@ public class OfferService
 
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 
+        // Ensure QuestPDF license is set for non-production/community use
+        QuestPDF.Settings.License = LicenseType.Community;
+
         Document.Create(container =>
         {
             container.Page(page =>

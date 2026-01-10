@@ -11,4 +11,8 @@ public class CandidateDocument
     [System.Text.Json.Serialization.JsonIgnore]
     public Candidate? Candidate { get; set; }
     public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
+
+    // Verification fields
+    public bool Verified { get; set; } = false;
+    public string? BackgroundCheckStatus { get; set; }
 }

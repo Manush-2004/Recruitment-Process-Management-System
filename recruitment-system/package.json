@@ -8,7 +8,12 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:recruiter": "node test/frontend-recruiter-flow-test.mjs"
+    "test:recruiter": "node test/frontend-recruiter-flow-test.mjs",
+    "e2e:hr": "node test/hr-e2e.cjs",
+    "e2e:interviewer": "node test/interviewer-e2e.cjs",
+    "e2e:recruiter": "node test/recruiter-e2e.cjs",
+    "e2e:reviewer": "node test/reviewer-e2e.cjs",
+    "e2e:all": "npm run e2e:hr && npm run e2e:interviewer && npm run e2e:recruiter && npm run e2e:reviewer"
   },
   "dependencies": {
     "@microsoft/signalr": "^10.0.0",

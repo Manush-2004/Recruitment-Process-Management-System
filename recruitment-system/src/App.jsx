@@ -32,6 +32,14 @@ import InterviewerDashboard from './pages/interviewer/InterviewerDashboard';
 import InterviewDetails from './pages/interviewer/InterviewDetails';
 import FeedbackPage from './pages/interviewer/FeedbackPage';
 
+// HR pages
+import HRDashboard from './pages/hr/HRDashboard';
+import HRInterview from './pages/hr/HRInterview';
+import DocumentVerification from './pages/hr/DocumentVerification';
+import OfferGeneration from './pages/hr/OfferGeneration';
+import HRCandidateInterviews from './pages/hr/HRCandidateInterviews';
+import FeedbackList from './pages/interviewer/FeedbackList';
+
 function App() {
   return (
     <AuthProvider>
@@ -76,8 +84,18 @@ function App() {
 
           {/* Interviewer routes */}
           <Route path="/interviewer/dashboard" element={<ProtectedRoute roles={["Interviewer"]}><InterviewerDashboard/></ProtectedRoute>} />
+          <Route path="/interviewer/interviews" element={<ProtectedRoute roles={["Interviewer"]}><InterviewerDashboard/></ProtectedRoute>} />
           <Route path="/interviewer/interview/:id" element={<ProtectedRoute roles={["Interviewer"]}><InterviewDetails/></ProtectedRoute>} />
+          <Route path="/interviewer/feedback" element={<ProtectedRoute roles={["Interviewer"]}><FeedbackList/></ProtectedRoute>} />
           <Route path="/interviewer/feedback/:id" element={<ProtectedRoute roles={["Interviewer"]}><FeedbackPage/></ProtectedRoute>} />
+
+          {/* HR routes */}
+          <Route path="/hr/dashboard" element={<ProtectedRoute roles={["HR"]}><HRDashboard/></ProtectedRoute>} />
+          <Route path="/hr/interview/:id" element={<ProtectedRoute roles={["HR"]}><HRInterview/></ProtectedRoute>} />
+          <Route path="/hr/candidate/:id/documents" element={<ProtectedRoute roles={["HR"]}><DocumentVerification/></ProtectedRoute>} />
+          <Route path="/hr/candidate/:id/interviews" element={<ProtectedRoute roles={["HR"]}><HRCandidateInterviews/></ProtectedRoute>} />
+          <Route path="/hr/offer/create" element={<ProtectedRoute roles={["HR"]}><OfferGeneration/></ProtectedRoute>} />
+          <Route path="/hr/offers/:id" element={<ProtectedRoute roles={["HR"]}><OfferGeneration/></ProtectedRoute>} />
 
           {/* Notifications (any authenticated user) */}
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage/></ProtectedRoute>} />

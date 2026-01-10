@@ -17,5 +17,10 @@ public interface ICandidateService
 
     Task<CandidateDocument> UploadDocumentAsync(int candidateId, IFormFile file, CancellationToken ct = default);
 
+    Task<IEnumerable<Candidate>> GetCandidatesAtStageAsync(string stage);
+
+    Task<IEnumerable<CandidateDocument>> GetCandidateDocumentsAsync(int candidateId);
+    Task<CandidateDocument> VerifyDocumentAsync(int candidateId, int documentId, bool verified);
+
     Task<BulkUploadResult> BulkUploadFromExcelAsync(IFormFile excelFile, CancellationToken ct = default);   
 }

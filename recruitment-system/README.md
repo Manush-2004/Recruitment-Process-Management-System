@@ -12,6 +12,17 @@ Currently, two official plugins are available:
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
 
 
+<!-- 
+---
+
+## Recent frontend updates
+- Normalized role handling in `AuthContext` so tokens using `Role` claim values like `'HR Manager'` are mapped to `'HR'` for consistent UI behavior.
+- Signup page now saves the HR role as `'HR'` (label remains 'HR Manager'). This ensures HR users see the HR navigation and can access HR-protected routes.
+- Added HR pages and routes: `HRDashboard`, `DocumentVerification`, `OfferGeneration`, and `HRCandidateInterviews` under `src/pages/hr`.
+- Feedback and interview-related client calls updated to match backend endpoints and role expectations (e.g., interview feedback summary accessible to HR and Recruiter).
+- E2E scripts under `test/` have been updated and tested locally (HR, Interviewer, Recruiter flows pass locally). -->
+
+
 <!-- ## Recruiter pages (new)
 This project now includes a basic **Recruiter** UI under `src/pages/recruiter/` implementing:
 

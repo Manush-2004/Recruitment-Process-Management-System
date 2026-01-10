@@ -66,7 +66,7 @@ Notes:
 ---
 
 ## Current status ✅
-- Frontend: Login, Signup, Dashboard, routing, API client and SignalR integration scaffolded and partially implemented.
+- Frontend: Login, Signup, Dashboard, routing, API client and SignalR integration scaffolded and fully implemented for reviewer/interviewer/HR flows.
 - Backend: Core controllers and services implemented; migrations and upload handling in place; JWT auth and SignalR configured.
 
 ---
@@ -79,13 +79,36 @@ Notes:
 ---
 
 ## Tests & developer helpers 🧪
-We keep lightweight test helpers and a mock server in the `test/` folder to aid development and CI checks.
+We keep lightweight test helpers and real E2E scripts in the `test/` folder to aid development and CI checks.
 
-- `test/test-e2e.cjs` — Real E2E script that runs against a running backend (may require a DB) ✅
-- `test/mock-server/` — Quick Express mock to run frontend flows locally ✅
-- `test/frontend-flow-test.mjs` — Mocked frontend tests using `axios-mock-adapter` ✅
-- `test/wait-and-run-real-e2e.cjs` — Poll helper that waits for the backend and then runs the real E2E script ✅
-- `test/scripts/testCandidateAuth.js` — Simple fetch-based script for manual auth checks ✅
+- `test/hr-e2e.cjs` — Full HR end-to-end script (register HR, create candidate, upload document, verify document, schedule interview, fetch feedback summary, generate offer). Run with `node test/hr-e2e.cjs`.
+- `test/interviewer-e2e.cjs` — Interviewer flow: register interviewer, create candidate, recruiter schedules interview, interviewer submits feedback and verifies duplicate checks. Run with `node test/interviewer-e2e.cjs`.
+- `test/recruiter-e2e.cjs` — Recruiter flow: register recruiter, create job, create candidate, schedule interview, coordinate an interviewer to submit feedback, and validate feedback summary; checks that recruiter cannot create offers. Run with `node test/recruiter-e2e.cjs`.
+- `test/reviewer-e2e.cjs` — Reviewer flow: register reviewer, submit screening, confirm history and duplicate checks. Run with `node test/reviewer-e2e.cjs`.
+- `test/frontend-flow-test.mjs` — Mocked frontend tests using `axios-mock-adapter` for quick token/flow checks.
+- `test/wait-and-run-real-e2e.cjs` — Poll helper that waits for the backend and then runs the real E2E script (useful in CI).
+
+Note: These scripts run against a running backend (default URL `http://localhost:5190` used in the scripts). Ensure the API is running and migrations are applied before running the E2E scripts. They create and mutate real data in the configured database, so use a disposable DB for CI or local testing when possible.
 
 ---
 
+<!-- ## Recent notable changes (since last release) 📝
+- Role & authorization fixes
+  - `FeedbackController` updated: class-level authentication now uses `[Authorize]` and individual routes use role-specific attributes. The interview feedback summary endpoint (`GET /api/feedback/interview/{interviewId}/summary`) now allows **HR** and **Recruiter** roles (no longer requires both Interviewer+HR).
+  - `OffersController` keeps `POST /api/offers` restricted to **HR**, while `GET /api/offers` is available to **Recruiter** and **HR**.
+- HR features
+  - Added HR pages: **HR Dashboard**, **Document Verification**, **Offer Generation**, and **Candidate Interviews** (see `src/pages/hr`).
+  - Backend endpoints for HR: `GET /api/candidates/hr-stage`, `GET /api/candidates/{id}/documents`, `POST /api/candidates/{candidateId}/documents/{documentId}/verify`.
+- Interview endpoints
+  - Added `GET /api/interviews/for-candidate/{candidateId}` to allow HR/Recruiter to view interviews for a candidate.
+- Data model & DB
+  - EF Migration `AddCandidateDocumentFields` adds `Verified` and `BackgroundCheckStatus` to `CandidateDocuments`.
+- PDF generation
+  - `OfferService` now sets `QuestPDF.Settings.License = LicenseType.Community` to avoid runtime license exceptions for community usage.
+- Frontend auth & UX
+  - Signup role value for HR normalized to `'HR'` (label kept as 'HR Manager') and token parsing normalizes old variants (`'HR Manager'`) to `'HR'` for consistent role checks.
+  - `AuthContext` now normalizes and de-duplicates role claims and performs case-insensitive role checks (improves conditional rendering such as the HR navbar).
+- Tests & E2E
+  - Added/updated E2E scripts under `recruitment-system/test/` for HR, Interviewer, Recruiter, Reviewer flows. HR E2E (`test/hr-e2e.cjs`) is passing end-to-end locally.
+
+These changes resolve authorization issues preventing HR access to feedback summaries, add HR features end-to-end, and harden role handling in the frontend so navigation and UI are consistent across different token shapes. -->

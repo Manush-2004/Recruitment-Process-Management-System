@@ -35,6 +35,23 @@ const FormData = require('form-data');
     const interview = await axios.post(`${base}/api/interviews`, { candidateId: cand.data.id, jobId: job.data.id, roundType: 'Tech', scheduledAt: new Date().toISOString(), interviewers: [{ name: 'Interviewer One', email: 'int1@example.com' }] }, { headers: { Authorization: 'Bearer ' + token } });
     console.log('Interview scheduled:', interview.data);
 
+    // Register an interviewer and submit feedback so recruiter can fetch summary
+    console.log('Registering an interviewer to submit feedback...');
+    const interviewerEmail = `int+${Date.now()}@example.com`;
+    await axios.post(`${base}/api/auth/register`, { FullName: 'E2E Interviewer', Email: interviewerEmail, Password: 'Pass123!', Role: 'Interviewer' });
+    const lint = await axios.post(`${base}/api/auth/login`, { Email: interviewerEmail, Password: 'Pass123!' });
+    const tokenInt = lint.data.token;
+    const me = (await axios.get(`${base}/api/auth/me`, { headers: { Authorization: 'Bearer ' + tokenInt } })).data;
+
+    console.log('Submitting feedback as interviewer...');
+    await axios.post(`${base}/api/feedback`, { interviewId: interview.data.id, interviewerUserId: me.id, interviewerName: me.fullName || me.email, overallRating: 5, comments: 'Great candidate', skills: [{ skillName: 'Problem Solving', rating: 5 }] }, { headers: { Authorization: 'Bearer ' + tokenInt } });
+    console.log('Feedback submitted by interviewer');
+
+    // Now recruiter (who scheduled) can fetch the summary for the interview
+    console.log('Recruiter fetching feedback summary (should succeed)');
+    const summary = (await axios.get(`${base}/api/feedback/interview/${interview.data.id}/summary`, { headers: { Authorization: 'Bearer ' + token } })).data;
+    console.log('Feedback summary:', summary);
+
     console.log('Attempt to create offer (should be 403 for Recruiter)');
     try {
       const offer = await axios.post(`${base}/api/offers`, { candidateId: cand.data.id, jobId: job.data.id, salary: 100000 }, { headers: { Authorization: 'Bearer ' + token } });

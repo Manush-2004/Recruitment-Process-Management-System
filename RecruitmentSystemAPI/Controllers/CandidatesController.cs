@@ -114,12 +114,15 @@ public class CandidatesController : ControllerBase
     [RequestSizeLimit(20_000_000)] // 20MB limit (adjust as needed)
     public async Task<IActionResult> Create([FromForm] string fullName, [FromForm] string email, [FromForm] string? phone, [FromForm] IFormFile? cv)
     {
+        _logger.LogDebug("Create Candidate called with fullName={FullName}, email={Email}, hasFile={HasFile}", fullName, email, cv != null);
+
         if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email))
             return BadRequest("FullName and Email are required.");
         var dto = new CreateCandidateRequest(fullName, email, phone);
         try
         {
             var candidate = await _service.CreateCandidateAsync(dto, cv);
+            _logger.LogInformation("Candidate created with id={CandidateId}", candidate.Id);
             return CreatedAtAction(nameof(Get), new { id = candidate.Id }, candidate);
         }
         catch (ArgumentException aex)
@@ -129,7 +132,7 @@ public class CandidatesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error creating candidate");
+            _logger.LogError(ex, "Unexpected error creating candidate for email={Email}: {Ex}", email, ex.ToString());
             // return a generic problem response to the client
             return Problem(detail: "An unexpected error occurred while creating the candidate.", statusCode: 500);
         }
@@ -142,6 +145,55 @@ public class CandidatesController : ControllerBase
         if (file == null) return BadRequest("File is required");
         var result = await _service.BulkUploadFromExcelAsync(file);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Get candidates currently at a specific stage (e.g., "HR").
+    /// </summary>
+    [HttpGet("hr-stage")]
+    [Authorize(Roles = "HR")]
+    public async Task<ActionResult<IEnumerable<Candidate>>> GetCandidatesAtStage([FromQuery] string stage)
+    {
+        if (string.IsNullOrWhiteSpace(stage)) return BadRequest("stage query parameter is required");
+        var list = await _service.GetCandidatesAtStageAsync(stage);
+        return Ok(list);
+    }
+
+    /// <summary>
+    /// Get documents for a candidate (HR role).
+    /// </summary>
+    [HttpGet("{id:int}/documents")]
+    [Authorize(Roles = "HR")]
+    public async Task<ActionResult<IEnumerable<CandidateDocument>>> GetCandidateDocuments(int id)
+    {
+        var cand = await _service.GetAsync(id);
+        if (cand == null) return NotFound();
+        var docs = await _service.GetCandidateDocumentsAsync(id);
+        return Ok(docs);
+    }
+
+    /// <summary>
+    /// Verify (or un-verify) a candidate document.
+    /// </summary>
+    public class VerifyDocumentRequest { public bool Verified { get; set; } }
+
+    [HttpPost("{candidateId:int}/documents/{documentId:int}/verify")]
+    [Authorize(Roles = "HR")]
+    public async Task<IActionResult> VerifyDocument(int candidateId, int documentId, [FromQuery] bool? verified = null, [FromBody] VerifyDocumentRequest? body = null)
+    {
+        var cand = await _service.GetAsync(candidateId);
+        if (cand == null) return NotFound();
+        var isVerified = verified ?? body?.Verified ?? true;
+        try
+        {
+            var doc = await _service.VerifyDocumentAsync(candidateId, documentId, isVerified);
+            return Ok(doc);
+        }
+        catch (ArgumentException aex)
+        {
+            _logger.LogWarning(aex, "Document verification failed");
+            return NotFound(aex.Message);
+        }
     }
 
 }    

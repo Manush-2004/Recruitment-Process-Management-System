@@ -75,4 +75,14 @@ public class InterviewsController : ControllerBase
             if (interview == null) return NotFound();
             return Ok(interview);
         }
+
+        // Get interviews for a specific candidate (HR + Recruiter)
+        [Authorize(Roles = "HR,Recruiter")]
+        [HttpGet("for-candidate/{candidateId:int}")]
+        public async Task<IActionResult> ForCandidate(int candidateId)
+        {
+            var all = await _service.GetAllAsync();
+            var list = all.Where(i => i.CandidateId == candidateId);
+            return Ok(list);
+        }
     }

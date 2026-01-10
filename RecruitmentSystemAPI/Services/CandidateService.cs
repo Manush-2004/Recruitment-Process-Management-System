@@ -27,52 +27,59 @@ public class CandidateService : ICandidateService
 
     public async Task<Candidate> CreateCandidateAsync(CreateCandidateRequest dto, IFormFile? file, CancellationToken ct = default)
     {
-        var candidate = new Candidate
+        try
         {
-            FullName = dto.FullName,
-            Email = dto.Email,
-            Phone = dto.Phone
-        };
-
-        _db.Candidates.Add(candidate);
-        await _db.SaveChangesAsync(ct);  // to get candidate.Id
-
-        if (file is not null && file.Length > 0)
-        {
-            // Ensure uploads folder exists
-            var uploadsRoot = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads", "cvs");
-            Directory.CreateDirectory(uploadsRoot);
-
-            // sanitize and create filename
-            var safeFileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
-            var filePath = Path.Combine(uploadsRoot, safeFileName);
-
-            using (var stream = File.Create(filePath))
+            var candidate = new Candidate
             {
-                await file.CopyToAsync(stream, ct);
-            }
-
-            var relativePath = Path.Combine("uploads", "cvs", safeFileName).Replace("\\", "/");
-
-            var doc = new CandidateDocument
-            {
-                CandidateId = candidate.Id,
-                FileName = file.FileName,
-                FilePath = "/" + relativePath, // leading slash so static files serve correctly
-                ContentType = file.ContentType ?? "application/octet-stream",
-                Size = file.Length
+                FullName = dto.FullName,
+                Email = dto.Email,
+                Phone = dto.Phone
             };
 
-            _db.CandidateDocuments.Add(doc);
-            await _db.SaveChangesAsync(ct);
+            _db.Candidates.Add(candidate);
+            await _db.SaveChangesAsync(ct);  // to get candidate.Id
+
+            if (file is not null && file.Length > 0)
+            {
+                // Ensure uploads folder exists
+                var uploadsRoot = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads", "cvs");
+                Directory.CreateDirectory(uploadsRoot);
+
+                // sanitize and create filename
+                var safeFileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+                var filePath = Path.Combine(uploadsRoot, safeFileName);
+
+                using (var stream = File.Create(filePath))
+                {
+                    await file.CopyToAsync(stream, ct);
+                }
+
+                var relativePath = Path.Combine("uploads", "cvs", safeFileName).Replace("\\", "/");
+
+                var doc = new CandidateDocument
+                {
+                    CandidateId = candidate.Id,
+                    FileName = file.FileName,
+                    FilePath = "/" + relativePath, // leading slash so static files serve correctly
+                    ContentType = file.ContentType ?? "application/octet-stream",
+                    Size = file.Length
+                };
+
+                _db.CandidateDocuments.Add(doc);
+                await _db.SaveChangesAsync(ct);
+            }
+
+            // reload with documents
+            return await _db.Candidates
+                         .Include(c => c.Documents)
+                         .AsNoTracking()
+                         .FirstAsync(c => c.Id == candidate.Id, ct);
         }
-
-        // reload with documents
-        return await _db.Candidates
-                     .Include(c => c.Documents)
-                     .AsNoTracking()
-                     .FirstAsync(c => c.Id == candidate.Id, ct);
-
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CreateCandidateAsync failed for {Email}", dto?.Email);
+            throw;
+        }
     }
 
     public async Task<IEnumerable<Candidate>> GetAllAsync()
@@ -162,6 +169,42 @@ public class CandidateService : ICandidateService
         _db.CandidateDocuments.Add(doc);
         await _db.SaveChangesAsync(ct);
 
+        return doc;
+    }
+
+    public async Task<IEnumerable<Candidate>> GetCandidatesAtStageAsync(string stage)
+    {
+        // Compute latest status per candidate using group max then pick the row with that timestamp
+        var allStatuses = await _db.StatusHistories.AsNoTracking().ToListAsync();
+
+        var latestIds = allStatuses
+            .GroupBy(s => s.CandidateId)
+            .Select(g => g.OrderByDescending(s => s.ChangedAt).First())
+            .Where(s => s.NewStatus == stage)
+            .Select(s => s.CandidateId)
+            .ToList();
+
+        return await _db.Candidates
+                        .Where(c => latestIds.Contains(c.Id))
+                        .Include(c => c.Documents)
+                        .AsNoTracking()
+                        .ToListAsync();
+    }
+
+    public async Task<IEnumerable<CandidateDocument>> GetCandidateDocumentsAsync(int candidateId)
+    {
+        return await _db.CandidateDocuments
+                        .Where(d => d.CandidateId == candidateId)
+                        .AsNoTracking()
+                        .ToListAsync();
+    }
+
+    public async Task<CandidateDocument> VerifyDocumentAsync(int candidateId, int documentId, bool verified)
+    {
+        var doc = await _db.CandidateDocuments.FirstOrDefaultAsync(d => d.Id == documentId && d.CandidateId == candidateId);
+        if (doc == null) throw new ArgumentException("Document not found");
+        doc.Verified = verified;
+        await _db.SaveChangesAsync();
         return doc;
     }
 
@@ -257,6 +300,7 @@ public class CandidateService : ICandidateService
                     _db.CandidateSkills.AddRange(candidateSkills);
                     await _db.SaveChangesAsync(ct);
                 }
+
 
                 result.CreatedCount++;
 

@@ -86,7 +86,7 @@ const UserCircleIcon = () => (
 // Available roles for recruitment system
 const AVAILABLE_ROLES = [
   { value: 'Recruiter', label: 'Recruiter', icon: <BriefcaseIcon /> },
-  { value: 'HR Manager', label: 'HR Manager', icon: <UsersIcon /> },
+  { value: 'HR', label: 'HR Manager', icon: <UsersIcon /> },
   { value: 'Interviewer', label: 'Interviewer', icon: <UserIcon /> },
   { value: 'Reviewer', label: 'Reviewer', icon: <ClipboardDocumentCheckIcon /> },
   { value: 'Candidate', label: 'Candidate', icon: <UserCircleIcon /> },

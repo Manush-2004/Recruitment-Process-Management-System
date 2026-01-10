@@ -66,8 +66,18 @@ const NavigationBar = () => {
               {hasRole && hasRole('Interviewer') && (
                 <div className="hidden sm:flex items-center gap-3">
                   <Link to="/interviewer/dashboard" className="text-sm text-gray-700 hover:text-gray-900">Dashboard</Link>
-                  <Link to="/interviewer/dashboard" className="text-sm text-gray-700 hover:text-gray-900">Interviews</Link>
-                  <Link to="/interviewer/dashboard" className="text-sm text-gray-700 hover:text-gray-900">Feedback</Link>
+                  <Link to="/interviewer/interviews" className="text-sm text-gray-700 hover:text-gray-900">Interviews</Link>
+                  <Link to="/interviewer/feedback" className="text-sm text-gray-700 hover:text-gray-900">Feedback</Link>
+                </div>
+              )}
+
+              {/* HR quick links */}
+              {hasRole && hasRole('HR') && (
+                <div className="hidden sm:flex items-center gap-3">
+                  <Link to="/hr/dashboard" className="text-sm text-gray-700 hover:text-gray-900">Dashboard</Link>
+                  <Link to="/hr/dashboard" className="text-sm text-gray-700 hover:text-gray-900">Candidates</Link>
+                  <Link to="/hr/dashboard" className="text-sm text-gray-700 hover:text-gray-900">Offers</Link>
+                  <Link to="/hr/offer/create" className="text-sm text-gray-700 hover:text-gray-900">Create Offer</Link>
                 </div>
               )}
               {/* Notification badge */}

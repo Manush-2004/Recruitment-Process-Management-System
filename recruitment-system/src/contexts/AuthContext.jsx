@@ -35,7 +35,17 @@ const extractUserFromToken = (t) => {
     const r = p['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
     if (Array.isArray(r)) roles.push(...r); else roles.push(r);
   }
-  return { email: p.unique_name || p.name || p.sub, fullName: p.FullName || p.fullName || null, roles };
+  // Normalize role names for consistent checks (e.g., 'HR Manager' -> 'HR')
+  const normalized = roles.map(r => {
+    if (!r) return r;
+    const s = String(r).trim();
+    if (s.toLowerCase() === 'hr manager' || s.toLowerCase() === 'hrmanager') return 'HR';
+    // keep as-is for other roles
+    return s;
+  }).filter(Boolean);
+  // dedupe
+  const unique = Array.from(new Set(normalized));
+  return { email: p.unique_name || p.name || p.sub, fullName: p.FullName || p.fullName || null, roles: unique };
 };
 
 export const AuthProvider = ({ children }) => {
@@ -110,7 +120,10 @@ export const AuthProvider = ({ children }) => {
     setError(null);
   };
 
-  const hasRole = (role) => user?.roles?.includes(role);
+  const hasRole = (role) => {
+    if (!user?.roles || !role) return false;
+    return user.roles.some(r => String(r).toLowerCase() === String(role).toLowerCase());
+  };
 
   const value = {
     token,
