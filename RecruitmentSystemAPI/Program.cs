@@ -63,6 +63,10 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateJobRequestValidator>(
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<OfferService>();
 
+// Admin services (user & role management, reporting)
+builder.Services.AddScoped<AdminService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+
 builder.Services.AddSignalR();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<StatusService>();

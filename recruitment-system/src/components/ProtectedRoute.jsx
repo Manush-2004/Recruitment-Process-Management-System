@@ -15,7 +15,7 @@ const ProtectedRoute = ({ children, roles }) => {
 
   if (roles && roles.length > 0) {
     const userRoles = user?.roles || [];
-    const allowed = roles.some((r) => userRoles.includes(r));
+    const allowed = roles.some((r) => userRoles.some(ur => String(ur).toLowerCase() === String(r).toLowerCase()));
     if (!allowed) {
       // Not authorized for this role
       return <Navigate to="/dashboard" replace />;

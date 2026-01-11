@@ -40,6 +40,12 @@ import OfferGeneration from './pages/hr/OfferGeneration';
 import HRCandidateInterviews from './pages/hr/HRCandidateInterviews';
 import FeedbackList from './pages/interviewer/FeedbackList';
 
+// Admin pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagement from './pages/admin/UserManagement';
+import RoleManagement from './pages/admin/RoleManagement';
+import Reports from './pages/admin/Reports';
+
 function App() {
   return (
     <AuthProvider>
@@ -96,6 +102,12 @@ function App() {
           <Route path="/hr/candidate/:id/interviews" element={<ProtectedRoute roles={["HR"]}><HRCandidateInterviews/></ProtectedRoute>} />
           <Route path="/hr/offer/create" element={<ProtectedRoute roles={["HR"]}><OfferGeneration/></ProtectedRoute>} />
           <Route path="/hr/offers/:id" element={<ProtectedRoute roles={["HR"]}><OfferGeneration/></ProtectedRoute>} />
+
+          {/* Admin routes */}
+          <Route path="/admin/dashboard" element={<ProtectedRoute roles={["Admin"]}><AdminDashboard/></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute roles={["Admin"]}><UserManagement/></ProtectedRoute>} />
+          <Route path="/admin/roles" element={<ProtectedRoute roles={["Admin"]}><RoleManagement/></ProtectedRoute>} />
+          <Route path="/admin/reports" element={<ProtectedRoute roles={["Admin"]}><Reports/></ProtectedRoute>} />
 
           {/* Notifications (any authenticated user) */}
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage/></ProtectedRoute>} />

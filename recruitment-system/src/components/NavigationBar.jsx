@@ -80,6 +80,16 @@ const NavigationBar = () => {
                   <Link to="/hr/offer/create" className="text-sm text-gray-700 hover:text-gray-900">Create Offer</Link>
                 </div>
               )}
+
+              {/* Admin quick links */}
+              {hasRole && hasRole('Admin') && (
+                <div className="hidden sm:flex items-center gap-3">
+                  <Link to="/admin/dashboard" className="text-sm text-gray-700 hover:text-gray-900">Dashboard</Link>
+                  <Link to="/admin/users" className="text-sm text-gray-700 hover:text-gray-900">Users</Link>
+                  <Link to="/admin/roles" className="text-sm text-gray-700 hover:text-gray-900">Roles</Link>
+                  <Link to="/admin/reports" className="text-sm text-gray-700 hover:text-gray-900">Reports</Link>
+                </div>
+              )}
               {/* Notification badge */}
               <div className="relative">
                 <button onClick={() => { markAllRead(); navigate('/notifications'); }} className="text-sm text-gray-700 hover:text-gray-900">

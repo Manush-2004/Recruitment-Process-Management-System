@@ -13,7 +13,8 @@
     "e2e:interviewer": "node test/interviewer-e2e.cjs",
     "e2e:recruiter": "node test/recruiter-e2e.cjs",
     "e2e:reviewer": "node test/reviewer-e2e.cjs",
-    "e2e:all": "npm run e2e:hr && npm run e2e:interviewer && npm run e2e:recruiter && npm run e2e:reviewer"
+    "e2e:admin": "node test/admin-e2e.cjs",
+    "e2e:all": "npm run e2e:hr && npm run e2e:interviewer && npm run e2e:recruiter && npm run e2e:reviewer && npm run e2e:admin"
   },
   "dependencies": {
     "@microsoft/signalr": "^10.0.0",

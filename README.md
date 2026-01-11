@@ -66,8 +66,8 @@ Notes:
 ---
 
 ## Current status ✅
-- Frontend: Login, Signup, Dashboard, routing, API client and SignalR integration scaffolded and fully implemented for reviewer/interviewer/HR flows.
-- Backend: Core controllers and services implemented; migrations and upload handling in place; JWT auth and SignalR configured.
+- Frontend: Login, Signup, Dashboard, routing, API client and SignalR integration scaffolded and fully implemented for reviewer/interviewer/HR flows. Admin UI has been added (Admin Dashboard, User Management, Role Management, Reports) and is protected by the `Admin` role.
+- Backend: Core controllers and services implemented; migrations and upload handling in place; JWT auth and SignalR configured. Admin endpoints implemented in `AdminController` and `ReportsController`.
 
 ---
 
@@ -112,3 +112,6 @@ Note: These scripts run against a running backend (default URL `http://localhost
   - Added/updated E2E scripts under `recruitment-system/test/` for HR, Interviewer, Recruiter, Reviewer flows. HR E2E (`test/hr-e2e.cjs`) is passing end-to-end locally.
 
 These changes resolve authorization issues preventing HR access to feedback summaries, add HR features end-to-end, and harden role handling in the frontend so navigation and UI are consistent across different token shapes. -->
+
+<!-- **Notes & Security:**
+- The registration endpoint (`POST /api/auth/register`) can create users with any requested role which is convenient for local development and E2E tests. For production, restrict admin/role creation to existing admins or a secure provisioning process and add audit logs. -->
