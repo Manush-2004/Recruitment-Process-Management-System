@@ -8,4 +8,5 @@ public interface IScreeningService
     Task<IEnumerable<Screening>> GetAssignedForReviewerAsync(string reviewerName);
     Task<IEnumerable<Screening>> GetHistoryForReviewerAsync(string reviewerName);
     Task<IEnumerable<Screening>> GetForCandidateAsync(int candidateId);
+    Task<Screening> UpdateScreeningAsync(int screeningId, UpdateScreeningRequest request, string? callerName = null, bool asReviewer = false);
 }

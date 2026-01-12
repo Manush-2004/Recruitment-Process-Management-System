@@ -25,6 +25,11 @@ export const screenCandidate = async (payload) => {
   return res.data;
 };
 
+export const updateScreening = async (id, payload) => {
+  const res = await axiosInstance.patch(`/api/screenings/${id}`, payload);
+  return res.data;
+};
+
 export default {
   getAssigned,
   getHistory,

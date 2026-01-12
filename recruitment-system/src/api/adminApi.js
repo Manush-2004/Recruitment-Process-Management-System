@@ -10,6 +10,11 @@ export const createUser = async (payload) => {
   return res.data;
 };
 
+export const clearUsers = async () => {
+  const res = await axiosInstance.post('/api/admin/clear-users');
+  return res.data;
+};
+
 export const updateUser = async (id, payload) => {
   const res = await axiosInstance.put(`/api/admin/users/${id}`, payload);
   return res.data;

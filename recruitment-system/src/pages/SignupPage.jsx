@@ -102,6 +102,8 @@ const SignupPage = () => {
     Email: '',
     Password: '',
     Role: '',
+    Phone: '',
+    Skills: ''
   });
   
   const [validationErrors, setValidationErrors] = useState({});
@@ -188,12 +190,16 @@ const SignupPage = () => {
       return;
     }
 
-    const result = await register({
+    const payload = {
       FullName: formData.FullName.trim(),
       Email: formData.Email.trim(),
       Password: formData.Password,
       Role: formData.Role,
-    });
+    };
+    if (formData.Phone) payload.Phone = formData.Phone;
+    if (formData.Skills) payload.Skills = formData.Skills;
+
+    const result = await register(payload);
 
     if (result.success) {
       navigate('/dashboard', { replace: true });
@@ -355,6 +361,16 @@ const SignupPage = () => {
                 </p>
               )}
             </div>
+
+            {/* Candidate extras: Phone and Skills */}
+            {formData.Role === 'Candidate' && (
+              <div>
+                <label className="block text-sm font-medium text-ds-text-label mb-2">Phone (optional)</label>
+                <input name="Phone" value={formData.Phone} onChange={handleChange} className="w-full mb-2 p-2 border rounded" placeholder="Phone" />
+                <label className="block text-sm font-medium text-ds-text-label mb-2">Skills (optional)</label>
+                <input name="Skills" value={formData.Skills} onChange={handleChange} className="w-full mb-2 p-2 border rounded" placeholder="Skills e.g., React:2;Node:3 (semicolon separated)" />
+              </div>
+            )}
           </div>
 
           {/* Submit Button - Design System: 48px height, gradient, 8px border radius */}

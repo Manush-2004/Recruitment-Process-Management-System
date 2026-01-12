@@ -59,8 +59,8 @@ const ScreeningPage = () => {
     e?.preventDefault?.();
     if (!validate()) return alert('Validation failed: ensure reviewer name and at least one approved skill for Shortlisted status.');
     const payload = {
-      candidateId: candidate?.id,
-      jobId: job?.id,
+      candidateId: candidate?.id, //
+      jobId: job?.id,//
       reviewerName,
       status,
       comments,
@@ -109,6 +109,9 @@ const ScreeningPage = () => {
             <div className="mb-3">
               <label className="block text-sm text-ds-text-secondary">Comments</label>
               <textarea value={comments} onChange={(e) => setComments(e.target.value)} className="w-full p-2 border rounded" />
+            </div>
+            <div className="mb-3">
+              <label className="block text-sm text-ds-text-secondary">(You may edit this screening later from your history)</label>
             </div>
 
             <div className="flex gap-2">

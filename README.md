@@ -92,26 +92,5 @@ Note: These scripts run against a running backend (default URL `http://localhost
 
 ---
 
-<!-- ## Recent notable changes (since last release) 📝
-- Role & authorization fixes
-  - `FeedbackController` updated: class-level authentication now uses `[Authorize]` and individual routes use role-specific attributes. The interview feedback summary endpoint (`GET /api/feedback/interview/{interviewId}/summary`) now allows **HR** and **Recruiter** roles (no longer requires both Interviewer+HR).
-  - `OffersController` keeps `POST /api/offers` restricted to **HR**, while `GET /api/offers` is available to **Recruiter** and **HR**.
-- HR features
-  - Added HR pages: **HR Dashboard**, **Document Verification**, **Offer Generation**, and **Candidate Interviews** (see `src/pages/hr`).
-  - Backend endpoints for HR: `GET /api/candidates/hr-stage`, `GET /api/candidates/{id}/documents`, `POST /api/candidates/{candidateId}/documents/{documentId}/verify`.
-- Interview endpoints
-  - Added `GET /api/interviews/for-candidate/{candidateId}` to allow HR/Recruiter to view interviews for a candidate.
-- Data model & DB
-  - EF Migration `AddCandidateDocumentFields` adds `Verified` and `BackgroundCheckStatus` to `CandidateDocuments`.
-- PDF generation
-  - `OfferService` now sets `QuestPDF.Settings.License = LicenseType.Community` to avoid runtime license exceptions for community usage.
-- Frontend auth & UX
-  - Signup role value for HR normalized to `'HR'` (label kept as 'HR Manager') and token parsing normalizes old variants (`'HR Manager'`) to `'HR'` for consistent role checks.
-  - `AuthContext` now normalizes and de-duplicates role claims and performs case-insensitive role checks (improves conditional rendering such as the HR navbar).
-- Tests & E2E
-  - Added/updated E2E scripts under `recruitment-system/test/` for HR, Interviewer, Recruiter, Reviewer flows. HR E2E (`test/hr-e2e.cjs`) is passing end-to-end locally.
-
-These changes resolve authorization issues preventing HR access to feedback summaries, add HR features end-to-end, and harden role handling in the frontend so navigation and UI are consistent across different token shapes. -->
-
 <!-- **Notes & Security:**
 - The registration endpoint (`POST /api/auth/register`) can create users with any requested role which is convenient for local development and E2E tests. For production, restrict admin/role creation to existing admins or a secure provisioning process and add audit logs. -->

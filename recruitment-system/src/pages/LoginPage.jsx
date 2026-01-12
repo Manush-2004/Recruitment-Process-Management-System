@@ -60,12 +60,14 @@ const LoginPage = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      // If candidate, redirect to candidate dashboard
-      if (hasRole && hasRole('Candidate')) {
-        navigate('/candidate/dashboard', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
-      }
+      // Redirect to role-specific dashboards
+      if (hasRole && hasRole('Candidate')) navigate('/candidate/dashboard', { replace: true });
+      else if (hasRole && hasRole('Recruiter')) navigate('/recruiter/dashboard', { replace: true });
+      else if (hasRole && hasRole('Reviewer')) navigate('/reviewer/dashboard', { replace: true });
+      else if (hasRole && hasRole('Interviewer')) navigate('/interviewer/dashboard', { replace: true });
+      else if (hasRole && hasRole('HR')) navigate('/hr/dashboard', { replace: true });
+      else if (hasRole && hasRole('Admin')) navigate('/admin/dashboard', { replace: true });
+      else navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate, hasRole]);
 
@@ -126,6 +128,11 @@ const LoginPage = () => {
 
     if (result.success) {
       if (hasRole && hasRole('Candidate')) navigate('/candidate/dashboard', { replace: true });
+      else if (hasRole && hasRole('Recruiter')) navigate('/recruiter/dashboard', { replace: true });
+      else if (hasRole && hasRole('Reviewer')) navigate('/reviewer/dashboard', { replace: true });
+      else if (hasRole && hasRole('Interviewer')) navigate('/interviewer/dashboard', { replace: true });
+      else if (hasRole && hasRole('HR')) navigate('/hr/dashboard', { replace: true });
+      else if (hasRole && hasRole('Admin')) navigate('/admin/dashboard', { replace: true });
       else navigate('/dashboard', { replace: true });
     }
   };

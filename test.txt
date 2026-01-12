@@ -1,0 +1,58 @@
+Name: Recruiter One
+Email: recruiter.one@example.com
+Password: P@ssw0rd!
+
+Name: Reviewer One
+Email: reviewer.one@example.com
+Password: P@ssw0rd!
+
+Name: Interviewer One
+Email: interviewer.one@example.com
+Password: P@ssw0rd!
+
+Name: HR One
+Email: hr.one@example.com
+Password: P@ssw0rd!
+
+Name: Admin One
+Email: admin.one@example.com
+Password: P@ssw0rd!
+
+
+
+Name: Test Candidate E
+Email: candidate.e@example.com
+Phone: +1-555-000-0104
+Password: P@ssw0rd!      // created by recruiter
+
+Name: Test Candidate F
+Email: candidate.f@example.com
+Phone: +1-555-000-0105
+Password: P@ssw0rd!     // created by self sign-up
+
+Name: Test Candidate G
+Email: candidate.g@example.com
+Phone: +1-555-000-0106
+Password: P@ssw0rd!    // created by admin
+
+
+
+Name: Test Candidate B
+Email: candidate.b@example.com
+Password: P@ssw0rd!    // created by admin
+
+
+Name: Test Candidate A
+Email: candidate.a@example.com
+Phone: +1-555-000-0101
+Password: P@ssw0rd!   // created by admin
+
+Name: Test Candidate C
+Email: candidate.c@example.com
+Phone: +1-555-000-0102
+Password: P@ssw0rd!      // created by recruiter
+
+Name: Test Candidate D
+Email: candidate.d@example.com
+Phone: +1-555-000-0103
+Password: P@ssw0rd!      // created by recruiter

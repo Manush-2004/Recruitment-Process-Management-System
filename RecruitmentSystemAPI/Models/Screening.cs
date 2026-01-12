@@ -12,7 +12,8 @@ public class Screening
     // Pending | Shortlisted | Rejected | OnHold
 
     public string? Comments { get; set; }
-    public DateTime ScreenedAt { get; set; } = DateTime.UtcNow;
+    // ScreenedAt is only set when screening is completed; null indicates pending assignment
+    public DateTime? ScreenedAt { get; set; } = null;
 
     public Candidate? Candidate { get; set; }
     public Job? Job { get; set; }

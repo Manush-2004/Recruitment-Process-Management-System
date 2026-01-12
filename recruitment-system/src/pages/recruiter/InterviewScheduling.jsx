@@ -10,7 +10,8 @@ const InterviewScheduling = () => {
   const [scheduledAt, setScheduledAt] = useState('');
   const [mode, setMode] = useState('Online');
   const [meetingLink, setMeetingLink] = useState('');
-  const [interviewers, setInterviewers] = useState([{ name: '', email: '' }]);
+  const [interviewers, setInterviewers] = useState([]);
+  const [availableInterviewers, setAvailableInterviewers] = useState([]);
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
@@ -18,20 +19,31 @@ const InterviewScheduling = () => {
       try {
         const cs = await getCandidates();
         const js = await getJobs();
+        // fetch available interviewers
+        const res = await (await import('../../api/usersApi')).getUsersByRole('Interviewer');
         setCandidates(cs || []);
         setJobs(js || []);
+        setAvailableInterviewers(res || []);
+        // initialize one interviewer select
+        setInterviewers([ { userId: res?.[0]?.id ?? '' } ]);
       } catch (e) { console.error('Failed to load data', e); }
     };
     load();
   }, []);
 
-  const addInterviewer = () => setInterviewers(s => [...s, { name: '', email: '' }]);
+  const addInterviewer = () => setInterviewers(s => [...s, { userId: '' }]);
   const updateInterviewer = (i, val) => setInterviewers(s => s.map((it, idx) => idx === i ? val : it));
   const removeInterviewer = (i) => setInterviewers(s => s.filter((_, idx) => idx !== i));
 
   const submit = async (e) => {
     e.preventDefault();
     if (!candidateId || !jobId || !scheduledAt) return alert('Select candidate, job and date');
+    // resolve interviewer ids to objects
+    const interviewerObjects = interviewers
+      .map(i => availableInterviewers.find(u => String(u.id) === String(i.userId)))
+      .filter(Boolean)
+      .map(u => ({ name: u.fullName ?? u.full_name, email: u.email }));
+
     const payload = {
       candidateId: parseInt(candidateId, 10),
       jobId: parseInt(jobId, 10),
@@ -39,7 +51,7 @@ const InterviewScheduling = () => {
       scheduledAt: new Date(scheduledAt).toISOString(),
       mode,
       meetingLink,
-      interviewers: interviewers.filter(i => i.name && i.email)
+      interviewers: interviewerObjects
     };
     try {
       const res = await scheduleInterview(payload);
@@ -66,7 +78,6 @@ const InterviewScheduling = () => {
           <select value={roundType} onChange={(e) => setRoundType(e.target.value)} className="p-2 border rounded">
             <option>Technical</option>
             <option>HR</option>
-            <option>Managerial</option>
           </select>
         </div>
 
@@ -78,8 +89,10 @@ const InterviewScheduling = () => {
           <label className="block text-sm text-ds-text-secondary mb-2">Interviewers</label>
           {interviewers.map((it, idx) => (
             <div key={idx} className="flex gap-2 items-center mb-2">
-              <input placeholder="Name" value={it.name} onChange={(e) => updateInterviewer(idx, { ...it, name: e.target.value })} className="flex-1 p-2 border rounded" />
-              <input placeholder="Email" value={it.email} onChange={(e) => updateInterviewer(idx, { ...it, email: e.target.value })} className="w-60 p-2 border rounded" />
+              <select value={it.userId} onChange={(e) => updateInterviewer(idx, { userId: e.target.value })} className="flex-1 p-2 border rounded">
+                <option value="">Select interviewer</option>
+                {availableInterviewers.map(u => <option key={u.id} value={u.id}>{u.fullName} ({u.email})</option>)}
+              </select>
               <button type="button" onClick={() => removeInterviewer(idx)} className="text-sm text-red-600">Remove</button>
             </div>
           ))}

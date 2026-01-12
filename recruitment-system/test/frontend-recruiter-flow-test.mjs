@@ -10,7 +10,7 @@ async function run() {
   mock.onGet('/api/candidates').reply(200, [{ id: 1, fullName: 'Test', email: 't@e' }]);
   mock.onPost('/api/jobs').reply(201, { id: 2, title: 'New Job' });
   mock.onPost('/api/candidates').reply(201, { id: 5, fullName: 'Created' });
-  mock.onPost('/api/screenings').reply(200, { id: 1, status: 'Shortlisted' });
+  mock.onPost('/api/screenings/assign').reply(200, { id: 1, status: 'Shortlisted' });
   mock.onPost('/api/interviews').reply(200, { id: 2, scheduledAt: new Date().toISOString() });
 
   console.log('Testing recruiter API client...');

@@ -79,7 +79,7 @@ const JobsPage = () => {
           {jobs.map((j) => (
             <li key={j.id} className="p-4 bg-white border rounded flex items-center justify-between">
               <div>
-                <p className="font-medium">{j.title}</p>
+                <p className="font-medium">{j.title} <span className="text-xs text-ds-text-secondary">(id:{j.id})</span></p>
                 <p className="text-sm text-ds-text-secondary">{j.description}</p>
                 <div className="text-xs text-ds-text-secondary mt-1">Required: {j.requiredSkills?.map(s => s.name).join(', ')}</div>
               </div>
@@ -87,6 +87,7 @@ const JobsPage = () => {
                 <button onClick={() => onEdit(j)} className="px-3 py-1 border rounded">Edit</button>
                 <button onClick={() => onDelete(j.id)} className="px-3 py-1 text-red-600 border rounded">Delete</button>
                 <a href={`/recruiter/job/${j.id}/candidates`} className="px-3 py-1 border rounded">View Candidates</a>
+                <a href={`/recruiter/offers?jobId=${j.id}`} className="px-3 py-1 border rounded">View Feedback</a>
               </div>
             </li>
           ))}

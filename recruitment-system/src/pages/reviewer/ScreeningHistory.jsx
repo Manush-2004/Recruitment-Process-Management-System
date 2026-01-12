@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import * as api from '../../api/reviewerApi.js';
 
 const ScreeningHistory = () => {
+  const { user, hasRole } = useAuth();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState(null);
+  const [editStatus, setEditStatus] = useState('Shortlisted');
+  const [editComments, setEditComments] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -33,7 +38,27 @@ const ScreeningHistory = () => {
               </div>
               <div className="mt-2">
                 <div className="text-sm font-medium">Comments</div>
-                <div className="text-sm text-ds-text-secondary">{h.comments ?? '—'}</div>
+                {editingId === h.id ? (
+                  <div className="mt-2 flex gap-2">
+                    <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="p-2 border rounded">
+                      <option>Shortlisted</option>
+                      <option>Rejected</option>
+                      <option>On Hold</option>
+                    </select>
+                    <input value={editComments} onChange={(e)=>setEditComments(e.target.value)} className="p-2 border rounded" />
+                    <button onClick={async ()=>{
+                      try {
+                        await api.updateScreening(h.id, { status: editStatus, comments: editComments });
+                        setEditingId(null);
+                        const h2 = await api.getHistory();
+                        setHistory(h2 || []);
+                      } catch (e) { console.error('Update failed', e); }
+                    }} className="px-3 py-1 bg-blue-600 text-white rounded">Save</button>
+                    <button onClick={()=>setEditingId(null)} className="px-3 py-1 border rounded">Cancel</button>
+                  </div>
+                ) : (
+                  <div className="text-sm text-ds-text-secondary">{h.comments ?? '—'}</div>
+                )}
               </div>
               <div className="mt-2">
                 <div className="text-sm font-medium">Skills</div>
@@ -43,6 +68,15 @@ const ScreeningHistory = () => {
                   ))}
                 </ul>
               </div>
+              {editingId !== h.id && <div className="mt-2">{ /* only allow reviewer who owns this, or recruiters/admins */ }
+                {(user?.fullName === h.reviewerName || hasRole('Recruiter') || hasRole('Admin')) ? (
+                  <button onClick={()=>{
+                    setEditingId(h.id);
+                    setEditStatus(h.status || 'Shortlisted');
+                    setEditComments(h.comments || '');
+                  }} className="px-3 py-1 border rounded">Edit</button>
+                ) : null}
+              </div>}
             </li>
           ))}
         </ul>

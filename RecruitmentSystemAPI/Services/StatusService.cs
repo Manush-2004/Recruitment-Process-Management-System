@@ -1,5 +1,6 @@
 using RecruitmentSystemAPI.Data;
 using RecruitmentSystemAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 public class StatusService
 {
@@ -29,8 +30,26 @@ public class StatusService
         _db.StatusHistories.Add(history);
         await _db.SaveChangesAsync();
 
-        await _notify.NotifyAsync(
-            $"Candidate {candidateId}: {oldStatus} → {newStatus}"
-        );
+        var message = $"Candidate {candidateId}: {oldStatus} → {newStatus}";
+
+        // Notify Recruiter and HR roles
+        try { await _notify.SendToRoleAsync("Recruiter", message); } catch {};
+        try { await _notify.SendToRoleAsync("HR", message); } catch {};
+
+        // Also attempt to notify the candidate user (if an account exists)
+        try
+        {
+            var candidate = await _db.Candidates.FindAsync(candidateId);
+            if (candidate != null)
+            {
+                var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == candidate.Email);
+                if (user != null)
+                {
+                    await _notify.SendToUserEmailAsync(user.Email, message);
+                }
+            }
+        }
+        catch { /* swallow to avoid breaking primary flow */ }
+
     }
 }

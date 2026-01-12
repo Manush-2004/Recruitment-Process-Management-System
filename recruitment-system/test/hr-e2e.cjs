@@ -95,7 +95,7 @@ const FormData = require('form-data');
 
     // As HR: fetch feedback summary for the scheduled interview
     console.log('HR fetching feedback summary...');
-    const hrSummary = (await axios.get(`${base}/api/feedback/interview/${scheduled.id}/summary`, { headers: { Authorization: 'Bearer ' + tokenHr } })).data;
+    const hrSummary = (await axios.get(`${base}/api/feedback/summary?candidateId=${cand.id}&jobId=${jobId}`, { headers: { Authorization: 'Bearer ' + tokenHr } })).data;
     console.log('HR feedback summary:', hrSummary);
 
     // Generate an offer

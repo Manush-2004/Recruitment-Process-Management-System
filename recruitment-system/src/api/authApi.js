@@ -17,12 +17,15 @@ import { apiRoutes } from '../config/apiRoutes';
  * @returns {Promise<{token: string}>} Response with JWT token
  */
 export const register = async (registerData) => {
-  const response = await axiosInstance.post(apiRoutes.auth.register, {
+  const payload = {
     FullName: registerData.FullName,
     Email: registerData.Email,
     Password: registerData.Password,
     Role: registerData.Role,
-  });
+  };
+  if (registerData.Phone) payload.Phone = registerData.Phone;
+  if (registerData.Skills) payload.Skills = registerData.Skills;
+  const response = await axiosInstance.post(apiRoutes.auth.register, payload);
   return response.data;
 };
 

@@ -47,9 +47,9 @@ const FormData = require('form-data');
     await axios.post(`${base}/api/feedback`, { interviewId: interview.data.id, interviewerUserId: me.id, interviewerName: me.fullName || me.email, overallRating: 5, comments: 'Great candidate', skills: [{ skillName: 'Problem Solving', rating: 5 }] }, { headers: { Authorization: 'Bearer ' + tokenInt } });
     console.log('Feedback submitted by interviewer');
 
-    // Now recruiter (who scheduled) can fetch the summary for the interview
+    // Now recruiter (who scheduled) can fetch the summary for the candidate+job
     console.log('Recruiter fetching feedback summary (should succeed)');
-    const summary = (await axios.get(`${base}/api/feedback/interview/${interview.data.id}/summary`, { headers: { Authorization: 'Bearer ' + token } })).data;
+    const summary = (await axios.get(`${base}/api/feedback/summary?candidateId=${cand.data.id}&jobId=${job.data.id}`, { headers: { Authorization: 'Bearer ' + token } })).data;
     console.log('Feedback summary:', summary);
 
     console.log('Attempt to create offer (should be 403 for Recruiter)');

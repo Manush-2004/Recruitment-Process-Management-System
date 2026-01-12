@@ -1,6 +1,12 @@
 public class InterviewFeedbackSummary
 {
     public int InterviewId { get; set; }
+    // Optional metadata when aggregating by candidate+job
+    public int? CandidateId { get; set; }
+    public string? CandidateName { get; set; }
+    public int? JobId { get; set; }
+    public double? SuggestedSalary { get; set; }
+
     public double AverageRating { get; set; }
     public int TotalFeedbacks { get; set; }
     public List<InterviewerFeedbackView> Feedbacks { get; set; } = new();

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import NavigationBar from '../../components/NavigationBar';
 import { getMe, getMyInterviews, getMyOffers, getMyStatusHistory } from '../../api/candidatesApi';
 import StatusTimeline from '../../components/StatusTimeline';
@@ -27,6 +28,26 @@ const CandidateDashboard = () => {
     })();
   }, []);
 
+  // Calculate applied-jobs count following business rules described in the spec
+  const computeAppliedCount = (hist = []) => {
+    // Sort by ChangedAt ascending
+    const sorted = (hist || []).slice().sort((a, b) => new Date(a.changedAt) - new Date(b.changedAt));
+    let count = 0;
+    for (const h of sorted) {
+      const oldS = h.oldStatus ?? h.OldStatus ?? '';
+      const newS = h.newStatus ?? h.NewStatus ?? '';
+      // Check transitions
+      if (oldS === 'Applied' && (newS === 'Shortlisted' || newS === 'On Hold')) {
+        count += 1;
+      } else if (newS === 'Rejected') {
+        // If rejected at screening stage itself, don't decrement below 0
+        if (oldS === 'Screening' && count === 0) continue;
+        count = Math.max(0, count - 1);
+      }
+    }
+    return count;
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <NavigationBar />
@@ -34,18 +55,18 @@ const CandidateDashboard = () => {
         <h1 className="text-2xl font-semibold mb-4">Candidate Dashboard</h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <a href="/candidate/profile" className="block p-4 bg-ds-surface rounded-ds-card shadow-ds-card hover:shadow-md transition-shadow">
+          <Link to="/candidate/profile" className="block p-4 bg-ds-surface rounded-ds-card shadow-ds-card hover:shadow-md transition-shadow">
             <p className="text-sm text-ds-text-secondary">Applied Jobs</p>
-            <p className="text-2xl font-semibold">{profile?.candidateJobs?.length ?? 0}</p>
-          </a>
-          <a href="/candidate/interviews" className="block p-4 bg-ds-surface rounded-ds-card shadow-ds-card hover:shadow-md transition-shadow">
+            <p className="text-2xl font-semibold">{computeAppliedCount(history)}</p>
+          </Link>
+          <Link to="/candidate/interviews" className="block p-4 bg-ds-surface rounded-ds-card shadow-ds-card hover:shadow-md transition-shadow">
             <p className="text-sm text-ds-text-secondary">Interviews Scheduled</p>
             <p className="text-2xl font-semibold">{interviews.length}</p>
-          </a>
-          <a href="/candidate/offers" className="block p-4 bg-ds-surface rounded-ds-card shadow-ds-card hover:shadow-md transition-shadow">
+          </Link>
+          <Link to="/candidate/offers" className="block p-4 bg-ds-surface rounded-ds-card shadow-ds-card hover:shadow-md transition-shadow">
             <p className="text-sm text-ds-text-secondary">Offers</p>
             <p className="text-2xl font-semibold">{offers.length}</p>
-          </a>
+          </Link>
         </div>
 
         <section className="mb-6">

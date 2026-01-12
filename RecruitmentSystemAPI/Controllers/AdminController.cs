@@ -8,10 +8,12 @@ using RecruitmentSystemAPI.Models;
 public class AdminController : ControllerBase
 {
     private readonly IAdminService _service;
+    private readonly Microsoft.AspNetCore.SignalR.IHubContext<RecruitmentSystemAPI.Hubs.NotificationHub> _hub;
 
-    public AdminController(IAdminService service)
+    public AdminController(IAdminService service, Microsoft.AspNetCore.SignalR.IHubContext<RecruitmentSystemAPI.Hubs.NotificationHub> hub)
     {
         _service = service;
+        _hub = hub;
     }
 
     [HttpGet("users")]
@@ -24,7 +26,7 @@ public class AdminController : ControllerBase
     [HttpPost("users")]
     public async Task<IActionResult> CreateUser(CreateUserRequest req)
     {
-        var user = await _service.CreateUserAsync(req.FullName, req.Email, req.Password, req.Role);
+        var user = await _service.CreateUserAsync(req.FullName, req.Email, req.Password, req.Role, req.Phone);
         return Ok(new { id = user.Id, fullName = user.FullName, email = user.Email, roles = user.UserRoles.Select(ur => ur.Role!.Name) });
     }
 
@@ -63,10 +65,20 @@ public class AdminController : ControllerBase
         var name = await _service.CreateRoleAsync(req.Role);
         return Ok(new { name });
     }
+
+    // Development helper: clear all users (and candidate-related data). Sends notification so clients refresh.
+    [HttpPost("clear-users")]
+    public async Task<IActionResult> ClearUsers()
+    {
+        await _service.ClearAllUsersAsync();
+        // notify connected clients that users (and candidates) were cleared
+        try { await _hub.Clients.All.SendCoreAsync("ReceiveNotification", new object[] { "UsersCleared" }, default); } catch { /* ignore */ }
+        return Ok();
+    }
 }
 
 // DTOs
-public class CreateUserRequest { public string FullName { get; set; } = default!; public string Email { get; set; } = default!; public string Password { get; set; } = default!; public string Role { get; set; } = "Recruiter"; }
+public class CreateUserRequest { public string FullName { get; set; } = default!; public string Email { get; set; } = default!; public string Password { get; set; } = default!; public string Role { get; set; } = "Recruiter"; public string? Phone { get; set; } }
 public class UpdateUserRequest { public string? FullName { get; set; } public bool? IsActive { get; set; } }
 public class AssignRoleRequest { public string Role { get; set; } = default!; }
 public class CreateRoleRequest { public string Role { get; set; } = default!; }

@@ -21,6 +21,11 @@ export const getInterviewFeedbackSummary = async (interviewId) => {
   return res.data;
 };
 
+export const getInterviewFeedbackSummaryByCandidateJob = async (candidateId, jobId) => {
+  const res = await axiosInstance.get(`/api/feedback/summary?candidateId=${candidateId}&jobId=${jobId}`);
+  return res.data;
+};
+
 export const getCandidateDocuments = async (candidateId) => {
   const res = await axiosInstance.get(`/api/candidates/${candidateId}/documents`);
   return res.data;

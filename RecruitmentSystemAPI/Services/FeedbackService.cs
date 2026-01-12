@@ -55,15 +55,59 @@ public class FeedbackService : IFeedbackService
         var feedbacks = await _db.InterviewFeedbacks
             .Where(f => f.InterviewId == interviewId)
             .Include(f => f.Skills)
+            .Include(f => f.Interview)
+                .ThenInclude(i => i.Candidate)
             .AsNoTracking()
             .ToListAsync();
 
         if (!feedbacks.Any())
             throw new Exception("No feedback available for this interview");
 
+        var firstInterview = feedbacks.First().Interview;
+
         var summary = new InterviewFeedbackSummary
         {
             InterviewId = interviewId,
+            CandidateId = firstInterview?.CandidateId,
+            CandidateName = firstInterview?.Candidate?.FullName,
+            JobId = firstInterview?.JobId,
+            TotalFeedbacks = feedbacks.Count,
+            AverageRating = Math.Round(feedbacks.Average(f => f.OverallRating), 2),
+            Feedbacks = feedbacks.Select(f => new InterviewerFeedbackView
+            {
+                InterviewerName = f.InterviewerName,
+                OverallRating = f.OverallRating,
+                Comments = f.Comments,
+                Skills = f.Skills.Select(s => new FeedbackSkillView
+                {
+                    SkillName = s.SkillName,
+                    Rating = s.Rating
+                }).ToList()
+            }).ToList()
+        };
+
+        return summary;
+    }
+
+    // New: aggregate across all interviews for a candidate+job
+    public async Task<InterviewFeedbackSummary> GetInterviewSummaryByCandidateJobAsync(int candidateId, int jobId)
+    {
+        var feedbacks = await _db.InterviewFeedbacks
+            .Include(f => f.Skills)
+            .Include(f => f.Interview)
+                .ThenInclude(i => i.Candidate)
+            .Where(f => f.Interview != null && f.Interview.CandidateId == candidateId && f.Interview.JobId == jobId)
+            .AsNoTracking()
+            .ToListAsync();
+
+        if (!feedbacks.Any())
+            throw new Exception("No feedback available for this candidate and job");
+
+        var summary = new InterviewFeedbackSummary
+        {
+            CandidateId = candidateId,
+            JobId = jobId,
+            CandidateName = feedbacks.First().Interview?.Candidate?.FullName,
             TotalFeedbacks = feedbacks.Count,
             AverageRating = Math.Round(feedbacks.Average(f => f.OverallRating), 2),
             Feedbacks = feedbacks.Select(f => new InterviewerFeedbackView

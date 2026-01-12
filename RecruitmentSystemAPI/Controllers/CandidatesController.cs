@@ -60,6 +60,32 @@ public class CandidatesController : ControllerBase
         return Ok(interviews);
     }
 
+    // Update authenticated candidate's simple profile (phone etc.)
+    [HttpPatch("me")]
+    [Authorize(Roles = "Candidate")]
+    public async Task<IActionResult> UpdateMe([FromBody] UpdateCandidateRequest req)
+    {
+        var email = User.FindFirst(ClaimTypes.Name)?.Value;
+        if (string.IsNullOrWhiteSpace(email)) return Unauthorized();
+        var cand = await _service.GetByEmailAsync(email);
+        if (cand == null) return NotFound();
+        try
+        {
+            var updated = await _service.UpdateCandidateAsync(cand.Id, req);
+            return Ok(updated);
+        }
+        catch (ArgumentException aex)
+        {
+            _logger.LogWarning(aex, "Update failed");
+            return BadRequest(aex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during UpdateMe for {Email}", email);
+            return Problem(detail: "An unexpected error occurred while updating profile.", statusCode: 500);
+        }
+    }
+
     // Candidate's offers
     [HttpGet("me/offers")]
     [Authorize(Roles = "Candidate")]
@@ -86,11 +112,11 @@ public class CandidatesController : ControllerBase
         return Ok(history);
     }
 
-    // Upload document for authenticated candidate
+    // Upload document for authenticated candidate (optionally specify type: Resume or Other)
     [HttpPost("me/documents")]
     [Authorize(Roles = "Candidate")]
     [RequestSizeLimit(20_000_000)]
-    public async Task<IActionResult> UploadDocument([FromForm] IFormFile file)
+    public async Task<IActionResult> UploadDocument([FromForm] IFormFile file, [FromForm] string? type)
     {
         if (file == null) return BadRequest("File is required");
         var email = User.FindFirst(ClaimTypes.Name)?.Value;
@@ -99,7 +125,7 @@ public class CandidatesController : ControllerBase
         if (cand == null) return NotFound();
         try
         {
-            var doc = await _service.UploadDocumentAsync(cand.Id, file);
+            var doc = await _service.UploadDocumentAsync(cand.Id, file, type);
             return CreatedAtAction(nameof(Get), new { id = cand.Id }, doc);
         }
         catch (ArgumentException aex)
@@ -109,16 +135,69 @@ public class CandidatesController : ControllerBase
         }
     }
 
+    public class AddSkillsRequest { public List<CandidateSkill> Skills { get; set; } = new(); }
+
+    [HttpPost("me/skills")]
+    [Authorize(Roles = "Candidate")]
+    public async Task<IActionResult> AddSkills([FromBody] AddSkillsRequest req)
+    {
+        var email = User.FindFirst(ClaimTypes.Name)?.Value;
+        if (string.IsNullOrWhiteSpace(email)) return Unauthorized();
+        var cand = await _service.GetByEmailAsync(email);
+        if (cand == null) return NotFound();
+        await _service.AddSkillsForCandidateAsync(cand.Id, req.Skills);
+        return Ok();
+    }
+
+    [HttpPatch("me/skills")]
+    [Authorize(Roles = "Candidate")]
+    public async Task<IActionResult> UpdateSkills([FromBody] AddSkillsRequest req)
+    {
+        var email = User.FindFirst(ClaimTypes.Name)?.Value;
+        if (string.IsNullOrWhiteSpace(email)) return Unauthorized();
+        var cand = await _service.GetByEmailAsync(email);
+        if (cand == null) return NotFound();
+        try
+        {
+            await _service.UpdateSkillsForCandidateAsync(cand.Id, req.Skills);
+            return Ok();
+        }
+        catch (ArgumentException aex)
+        {
+            _logger.LogWarning(aex, "Update skills failed");
+            return BadRequest(aex.Message);
+        }
+    }
+
+    [HttpDelete("me/skills/{skillId:int}")]
+    [Authorize(Roles = "Candidate")]
+    public async Task<IActionResult> DeleteSkill(int skillId)
+    {
+        var email = User.FindFirst(ClaimTypes.Name)?.Value;
+        if (string.IsNullOrWhiteSpace(email)) return Unauthorized();
+        var cand = await _service.GetByEmailAsync(email);
+        if (cand == null) return NotFound();
+        try
+        {
+            await _service.RemoveSkillAsync(cand.Id, skillId);
+            return Ok();
+        }
+        catch (ArgumentException aex)
+        {
+            _logger.LogWarning(aex, "Delete skill failed");
+            return NotFound(aex.Message);
+        }
+    }
     // Accept multipart/form-data: fields + file ("cv")
     [HttpPost]
     [RequestSizeLimit(20_000_000)] // 20MB limit (adjust as needed)
-    public async Task<IActionResult> Create([FromForm] string fullName, [FromForm] string email, [FromForm] string? phone, [FromForm] IFormFile? cv)
+    public async Task<IActionResult> Create([FromForm] string fullName, [FromForm] string email, [FromForm] string? phone, [FromForm] string? password, [FromForm] string? skills, [FromForm] IFormFile? cv)
     {
         _logger.LogDebug("Create Candidate called with fullName={FullName}, email={Email}, hasFile={HasFile}", fullName, email, cv != null);
 
         if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email))
             return BadRequest("FullName and Email are required.");
-        var dto = new CreateCandidateRequest(fullName, email, phone);
+        var dto = new CreateCandidateRequest(fullName, email, phone, password, skills);
         try
         {
             var candidate = await _service.CreateCandidateAsync(dto, cv);
@@ -157,6 +236,29 @@ public class CandidatesController : ControllerBase
         if (string.IsNullOrWhiteSpace(stage)) return BadRequest("stage query parameter is required");
         var list = await _service.GetCandidatesAtStageAsync(stage);
         return Ok(list);
+    }
+
+    // New: Recruiter moves candidate to HR stage after reviewing feedback summary
+    [HttpPost("{candidateId:int}/move-to-hr")]
+    [Authorize(Roles = "Recruiter")]
+    public async Task<IActionResult> MoveToHr(int candidateId)
+    {
+        var actor = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Recruiter";
+        try
+        {
+            await _service.MoveCandidateToHrAsync(candidateId, actor);
+            return Ok(new { message = "Candidate moved to HR stage" });
+        }
+        catch (ArgumentException aex)
+        {
+            _logger.LogWarning(aex, "MoveToHr failed");
+            return NotFound(aex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "MoveToHr failed for candidate {Id}", candidateId);
+            return BadRequest(ex.Message);
+        }
     }
 
     /// <summary>

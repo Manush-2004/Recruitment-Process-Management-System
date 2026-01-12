@@ -4,15 +4,17 @@ import * as api from '../../api/adminApi.js';
 const RoleManagement = () => {
   const [roles, setRoles] = useState([]);
   const [newRole, setNewRole] = useState('');
+  const allowedRoles = ['Candidate','Recruiter','Reviewer','Interviewer','HR','Admin'];
 
-  useEffect(()=>{ api.getRoles().then(setRoles).catch(console.error); }, []);
+  useEffect(()=>{ api.getRoles().then(r => setRoles(r.filter(x=>allowedRoles.includes(x)))).catch(console.error); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!allowedRoles.includes(newRole)) return alert('Only these roles are allowed: ' + allowedRoles.join(', '));
     try {
       await api.createRole(newRole);
       setNewRole('');
-      setRoles(await api.getRoles());
+      setRoles(await api.getRoles().then(r=>r.filter(x=>allowedRoles.includes(x))));
     } catch (err) { alert('Failed to create role: ' + err.message); }
   };
 

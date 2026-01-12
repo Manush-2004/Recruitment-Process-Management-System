@@ -38,6 +38,38 @@ public class AuthService : IAuthService
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
+        // If this is a Candidate registration, ensure Candidate profile is created and add phone/skills
+        if (string.Equals(req.Role, "Candidate", StringComparison.OrdinalIgnoreCase))
+        {
+            var existing = await _db.Candidates.FirstOrDefaultAsync(c => c.Email == req.Email);
+            if (existing == null)
+            {
+                var cand = new Candidate { FullName = req.FullName, Email = req.Email, Phone = req.Phone };
+                _db.Candidates.Add(cand);
+                await _db.SaveChangesAsync();
+
+                if (!string.IsNullOrWhiteSpace(req.Skills))
+                {
+                    var parts = req.Skills.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var p in parts)
+                    {
+                        var seg = p.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                        var name = seg[0].Trim();
+                        var years = 0;
+                        if (seg.Length > 1 && int.TryParse(seg[1].Trim(), out var y)) years = y;
+                        if (string.IsNullOrWhiteSpace(name)) continue;
+                        _db.CandidateSkills.Add(new CandidateSkill { CandidateId = cand.Id, Name = name, Years = years });
+                    }
+                    await _db.SaveChangesAsync();
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(req.Phone) && string.IsNullOrWhiteSpace(existing.Phone))
+            {
+                existing.Phone = req.Phone;
+                await _db.SaveChangesAsync();
+            }
+        }
+
         return GenerateToken(user);
     }
 

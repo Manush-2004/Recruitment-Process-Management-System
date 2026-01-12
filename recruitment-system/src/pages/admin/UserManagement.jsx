@@ -1,31 +1,38 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import * as api from '../../api/adminApi.js';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
-  const [form, setForm] = useState({ fullName: '', email: '', password: '', role: 'Recruiter' });
+  const allowedRoles = ['Candidate','Recruiter','Reviewer','Interviewer','HR','Admin'];
+  const [form, setForm] = useState({ fullName: '', email: '', password: '', role: 'Recruiter', phone: '' });
 
   const load = async () => {
     try {
       const u = await api.getUsers();
-      setUsers(u);
+      // exclude users that have roles outside the allowed set
+      setUsers(u.filter(x => (x.roles || []).every(r => allowedRoles.includes(r))));
     } catch (err) { console.error(err); }
-    try { const r = await api.getRoles(); setRoles(r); } catch (err) { console.error(err); }
+    try { const r = await api.getRoles(); setRoles(r.filter(rr => allowedRoles.includes(rr))); } catch (err) { console.error(err); }
   };
+
+  const { hasRole } = useAuth();
 
   useEffect(() => { load(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!allowedRoles.includes(form.role)) return alert('Selected role is not allowed');
     try {
-      await api.createUser({ FullName: form.fullName, Email: form.email, Password: form.password, Role: form.role });
-      setForm({ fullName: '', email: '', password: '', role: 'Recruiter' });
+      await api.createUser({ FullName: form.fullName, Email: form.email, Password: form.password, Role: form.role, Phone: form.phone });
+      setForm({ fullName: '', email: '', password: '', role: 'Recruiter', phone: '' });
       await load();
     } catch (err) { alert('Failed to create user: ' + err.message); }
   };
 
   const handleAssign = async (id, role) => {
+    if (!allowedRoles.includes(role)) return alert('Role not allowed');
     try {
       await api.assignRole(id, role);
       await load();
@@ -47,6 +54,7 @@ const UserManagement = () => {
           <h2 className="font-medium mb-2">Create user</h2>
           <input className="w-full mb-2 p-2 border rounded" placeholder="Full name" value={form.fullName} onChange={e=>setForm({...form, fullName: e.target.value})} />
           <input className="w-full mb-2 p-2 border rounded" placeholder="Email" value={form.email} onChange={e=>setForm({...form, email: e.target.value})} />
+          <input className="w-full mb-2 p-2 border rounded" placeholder="Phone (optional)" value={form.phone} onChange={e=>setForm({...form, phone: e.target.value})} />
           <input className="w-full mb-2 p-2 border rounded" placeholder="Password" value={form.password} onChange={e=>setForm({...form, password: e.target.value})} />
           <select className="w-full mb-2 p-2 border rounded" value={form.role} onChange={e=>setForm({...form, role: e.target.value})}>
             {roles.map(r => <option key={r} value={r}>{r}</option>)}
@@ -55,7 +63,15 @@ const UserManagement = () => {
         </form>
 
         <div className="md:col-span-2 p-4 bg-white rounded shadow">
-          <h2 className="font-medium mb-2">Users</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-medium mb-2">Users</h2>
+            {hasRole('Admin') && (
+              <button onClick={async () => {
+                if (!confirm('Are you sure? This will remove all non-admin users.')) return;
+                try { await api.clearUsers(); await load(); alert('Users cleared'); } catch (err) { alert('Failed to clear users: ' + err.message); }
+              }} className="px-3 py-2 bg-red-600 text-white rounded">Clear users</button>
+            )}
+          </div>
           <div className="overflow-auto">
             <table className="w-full text-sm">
               <thead className="text-ds-text-secondary">

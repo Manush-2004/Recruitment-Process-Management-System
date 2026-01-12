@@ -16,5 +16,11 @@ public record UpdateJobRequest(
 public record CreateCandidateRequest(
     string FullName,
     string Email,
+    string? Phone,
+    string? Password,
+    string? Skills
+);
+
+public record UpdateCandidateRequest(
     string? Phone
 );

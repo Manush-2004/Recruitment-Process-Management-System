@@ -56,8 +56,9 @@ export const getCandidatesForJob = async (jobId) => {
 
 // Screenings
 export const assignScreening = async (payload) => {
+  // Recruiter assign endpoint
   // payload: { candidateId, jobId, reviewerName, status, comments, skills: [{skillName, yearsOfExperience, isApproved}] }
-  const res = await axiosInstance.post('/api/screenings', payload);
+  const res = await axiosInstance.post('/api/screenings/assign', payload);
   return res.data;
 };
 

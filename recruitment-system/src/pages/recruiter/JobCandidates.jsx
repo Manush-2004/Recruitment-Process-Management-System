@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { getJob, getCandidatesForJob } from '../../api/recruiterApi';
-import { useParams } from 'react-router-dom';
 
 const SkillMatchBar = ({ matched, total }) => {
   const pct = total === 0 ? 0 : Math.round((matched / total) * 100);
@@ -51,7 +51,7 @@ const JobCandidates = () => {
                   <div className="text-sm text-ds-text-secondary">{total === 0 ? 'No skills' : `${matched}/${total}`}</div>
                 </div>
                 <div className="ml-4">
-                  <button onClick={() => window.location.href = `/recruiter/screening?candidateId=${c.id}&jobId=${id}`} className="px-3 py-1 bg-yellow-500 text-white rounded">Assign Screening</button>
+                  <a href={`/recruiter/screening?candidateId=${c.id}&jobId=${id}`} className="px-3 py-1 bg-yellow-500 text-white rounded">Assign Screening</a>
                 </div>
               </li>
             );

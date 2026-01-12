@@ -15,8 +15,9 @@ export const NotificationProvider = ({ children }) => {
     const hubUrl = new URL('/hubs/notifications', API_BASE_URL).href;
 
     const conn = new signalR.HubConnectionBuilder()
-      .withUrl(hubUrl)
+      .withUrl(hubUrl, { accessTokenFactory: () => localStorage.getItem('token') })
       .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.Warning)
       .build();
 
     conn.on('ReceiveNotification', (message) => {
@@ -33,6 +34,23 @@ export const NotificationProvider = ({ children }) => {
         connectionRef.current = conn;
       } catch (err) {
         console.warn('SignalR start failed (attempt ' + attempts + ')', err);
+
+        // If negotiation abort is the cause, try direct WebSocket transport as a fallback
+        if (err && (err.name === 'AbortError' || (err.message && err.message.toLowerCase().includes('negotiation')))) {
+          try {
+            console.info('SignalR: retrying with WebSockets transport');
+            const wsConn = new signalR.HubConnectionBuilder()
+              .withUrl(hubUrl, { transport: signalR.HttpTransportType.WebSockets })
+              .withAutomaticReconnect()
+              .build();
+            await wsConn.start();
+            connectionRef.current = wsConn;
+            return;
+          } catch (wsErr) {
+            console.warn('SignalR websocket fallback failed', wsErr);
+          }
+        }
+
         if (attempts < 6) {
           const delay = Math.min(3000 * attempts, 15000);
           setTimeout(startWithRetry, delay);
@@ -43,7 +61,12 @@ export const NotificationProvider = ({ children }) => {
     startWithRetry();
 
     return () => {
-      conn.stop().catch(() => {});
+      const toStop = connectionRef.current || conn;
+      if (toStop) {
+        // graceful stop
+        toStop.stop().catch(() => {});
+        if (connectionRef.current === conn) connectionRef.current = null;
+      }
     };
   }, []);
 

@@ -7,13 +7,15 @@ public class InterviewService : IInterviewService
     private readonly AppDbContext _db;
     private readonly IEmailService _email;
     private readonly StatusService _statusService;
+    private readonly INotificationService _notify;
     private readonly ILogger<InterviewService> _logger;
 
-    public InterviewService(AppDbContext db, IEmailService email, StatusService statusService, ILogger<InterviewService> logger)
+    public InterviewService(AppDbContext db, IEmailService email, StatusService statusService, INotificationService notify, ILogger<InterviewService> logger)
     {
         _db = db;
         _email = email;
         _statusService = statusService;
+        _notify = notify;
         _logger = logger;
     }
 
@@ -24,7 +26,8 @@ public class InterviewService : IInterviewService
             CandidateId = req.CandidateId,
             JobId = req.JobId,
             RoundType = req.RoundType,
-            ScheduledAt = req.ScheduledAt,
+            // Store scheduled time as UTC for consistent display across clients
+            ScheduledAt = req.ScheduledAt.ToUniversalTime(),
             Mode = req.Mode,
             MeetingLink = req.MeetingLink,
             Interviewers = req.Interviewers.Select(i => new Interviewer
@@ -53,6 +56,15 @@ public class InterviewService : IInterviewService
                     "Interview Scheduled",
                     $"Interview ({interview.RoundType}) scheduled at {interview.ScheduledAt}. Link: {interview.MeetingLink}"
                 );
+                // Also send an in-app notification (SignalR) targeted to the interviewer if possible
+                try
+                {
+                    await _notify.SendToUserEmailAsync(iv.Email, $"Interview scheduled: {iv.Name} — {interview.RoundType} at {interview.ScheduledAt}");
+                }
+                catch (Exception nEx)
+                {
+                    _logger.LogWarning(nEx, "Failed to send in-app notification for {email}", iv.Email);
+                }
             }
             catch (Exception ex)
             {

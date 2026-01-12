@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
 import NavigationBar from '../../components/NavigationBar';
-import { getMe, uploadDocument } from '../../api/candidatesApi';
+import { getMe, uploadDocument, updateMe, addSkills, deleteSkill } from '../../api/candidatesApi';
 
 const CandidateProfile = () => {
   const [profile, setProfile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [type, setType] = useState('Resume');
+  const [editing, setEditing] = useState(false);
+  const [editPhone, setEditPhone] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [newSkillText, setNewSkillText] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -30,7 +35,7 @@ const CandidateProfile = () => {
     setUploading(true);
     setError(null);
     try {
-      await uploadDocument(f);
+      await uploadDocument(f, type);
       const refreshed = await getMe();
       setProfile(refreshed);
     } catch (err) {
@@ -67,12 +72,39 @@ const CandidateProfile = () => {
               <p className="font-medium mb-3">{profile?.email ?? profile?.Email}</p>
 
               <p className="text-sm text-ds-text-secondary">Phone</p>
-              <p className="font-medium mb-6">{profile?.phone ?? profile?.Phone ?? '—'}</p>
+              {!editing ? (
+                <div className="flex items-center gap-4 mb-6">
+                  <p className="font-medium">{profile?.phone ?? profile?.Phone ?? '—'}</p>
+                  <button onClick={() => { setEditing(true); setEditPhone(profile?.phone ?? profile?.Phone ?? ''); }} className="px-2 py-1 text-sm border rounded">Edit</button>
+                </div>
+              ) : (
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                    setSaving(true);
+                    await updateMe({ phone: editPhone });
+                    const refreshed = await getMe();
+                    setProfile(refreshed);
+                    setEditing(false);
+                  } catch (err) {
+                    console.error(err);
+                    setError('Save failed');
+                  } finally { setSaving(false); }
+                }} className="mb-6 flex items-center gap-2">
+                  <input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="Phone" className="p-2 border rounded" />
+                  <button type="submit" disabled={saving} className="px-3 py-1 bg-blue-600 text-white rounded">{saving? 'Saving…' : 'Save'}</button>
+                  <button type="button" onClick={() => setEditing(false)} className="px-3 py-1 border rounded">Cancel</button>
+                </form>
+              )}
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-ds-text-label mb-2">Resume / Documents</label>
                 <div className="flex items-center gap-3">
                   <input type="file" onChange={handleFile} disabled={uploading} />
+                  <select value={type} onChange={e=>setType(e.target.value)} className="p-2 border rounded">
+                    <option value="Resume">Resume</option>
+                    <option value="Other">Other</option>
+                  </select>
                   {uploading && <span className="text-sm text-ds-text-secondary">Uploading...</span>}
                 </div>
                 <div className="mt-3 space-y-2">
@@ -92,8 +124,39 @@ const CandidateProfile = () => {
                 <label className="block text-sm font-medium text-ds-text-label mb-2">Skills</label>
                 <div className="flex gap-2 flex-wrap">
                   {(profile?.skills || profile?.Skills || []).map((s, i) => (
-                    <span key={i} className="px-3 py-1 bg-gray-100 rounded-full text-sm">{s.name ?? s.Name} · {s.years ?? s.Years}y</span>
+                    <div key={s.id ?? s.Id ?? i} className="flex items-center gap-2">
+                      <span className="px-3 py-1 bg-gray-100 rounded-full text-sm">{s.name ?? s.Name} · {s.years ?? s.Years}y</span>
+                      <button onClick={async () => {
+                        if (!confirm('Delete this skill?')) return;
+                        try {
+                          setError(null);
+                          await deleteSkill(s.id ?? s.Id);
+                          const refreshed = await getMe();
+                          setProfile(refreshed);
+                        } catch (err) {
+                          console.error('Delete skill failed', err);
+                          setError('Delete skill failed');
+                        }
+                      }} className="text-sm text-red-500">✕</button>
+                    </div>
                   ))}
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <input value={newSkillText} onChange={(e) => setNewSkillText(e.target.value)} placeholder="Add skill e.g., React:2" className="p-2 border rounded" />
+                  <button onClick={async () => {
+                    if (!newSkillText) return;
+                    const parts = newSkillText.split(';').map(s => s.trim()).filter(Boolean);
+                    const skills = parts.map(p => {
+                      const seg = p.split(':').map(x => x.trim());
+                      return { name: seg[0], years: parseInt(seg[1] || '0', 10) };
+                    });
+                    try {
+                      await addSkills(skills);
+                      const refreshed = await getMe();
+                      setProfile(refreshed);
+                      setNewSkillText('');
+                    } catch (err) { console.error('Add skills failed', err); setError('Add skills failed'); }
+                  }} className="px-3 py-1 bg-green-600 text-white rounded">Add</button>
                 </div>
               </div>
             </>
