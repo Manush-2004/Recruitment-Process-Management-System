@@ -116,7 +116,7 @@ public class CandidatesController : ControllerBase
     [HttpPost("me/documents")]
     [Authorize(Roles = "Candidate")]
     [RequestSizeLimit(20_000_000)]
-    public async Task<IActionResult> UploadDocument([FromForm] IFormFile file, [FromForm] string? type)
+    public async Task<IActionResult> UploadDocument(IFormFile file, [FromForm] string? type)
     {
         if (file == null) return BadRequest("File is required");
         var email = User.FindFirst(ClaimTypes.Name)?.Value;
@@ -191,7 +191,7 @@ public class CandidatesController : ControllerBase
     // Accept multipart/form-data: fields + file ("cv")
     [HttpPost]
     [RequestSizeLimit(20_000_000)] // 20MB limit (adjust as needed)
-    public async Task<IActionResult> Create([FromForm] string fullName, [FromForm] string email, [FromForm] string? phone, [FromForm] string? password, [FromForm] string? skills, [FromForm] IFormFile? cv)
+    public async Task<IActionResult> Create([FromForm] string fullName, [FromForm] string email, [FromForm] string? phone, [FromForm] string? password, [FromForm] string? skills, IFormFile? cv)
     {
         _logger.LogDebug("Create Candidate called with fullName={FullName}, email={Email}, hasFile={HasFile}", fullName, email, cv != null);
 
@@ -219,7 +219,7 @@ public class CandidatesController : ControllerBase
 
     [HttpPost("bulk")]
     [RequestSizeLimit(50_000_000)]
-    public async Task<IActionResult> Bulk([FromForm] IFormFile file)
+    public async Task<IActionResult> Bulk(IFormFile file)
     {
         if (file == null) return BadRequest("File is required");
         var result = await _service.BulkUploadFromExcelAsync(file);

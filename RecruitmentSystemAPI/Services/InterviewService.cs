@@ -26,8 +26,9 @@ public class InterviewService : IInterviewService
             CandidateId = req.CandidateId,
             JobId = req.JobId,
             RoundType = req.RoundType,
-            // Store scheduled time as UTC for consistent display across clients
-            ScheduledAt = req.ScheduledAt.ToUniversalTime(),
+            // Store the datetime as-is without timezone conversion
+            // Frontend sends local time, we preserve it exactly
+            ScheduledAt = DateTime.SpecifyKind(req.ScheduledAt, DateTimeKind.Unspecified),
             Mode = req.Mode,
             MeetingLink = req.MeetingLink,
             Interviewers = req.Interviewers.Select(i => new Interviewer
@@ -40,12 +41,17 @@ public class InterviewService : IInterviewService
         _db.Interviews.Add(interview);
         await _db.SaveChangesAsync();
 
-        await _statusService.ChangeCandidateStatusAsync(
-            req.CandidateId,
-            "Shortlisted",
-            "Interview Scheduled",
-            "Recruiter"
-        );
+        // Only change status for non-HR interviews
+        // HR interviews should keep candidates at HR stage until decision is made
+        if (req.RoundType != "HR Round")
+        {
+            await _statusService.ChangeCandidateStatusAsync(
+                req.CandidateId,
+                "Shortlisted",
+                "Interview Scheduled",
+                "Recruiter"
+            );
+        }
 
         foreach (var iv in interview.Interviewers)
         {
@@ -85,5 +91,40 @@ public class InterviewService : IInterviewService
                         .OrderBy(i => i.ScheduledAt)
                         .AsNoTracking()
                         .ToListAsync();
+    }
+
+    public async Task<Interview> UpdateInterviewResultAsync(int interviewId, string result, string actor)
+    {
+        var interview = await _db.Interviews
+            .Include(i => i.Candidate)
+            .FirstOrDefaultAsync(i => i.Id == interviewId);
+
+        if (interview == null)
+            throw new ArgumentException("Interview not found");
+
+        interview.Result = result;
+        interview.Status = "Completed";
+        await _db.SaveChangesAsync();
+
+        // Update candidate status based on result
+        if (interview.RoundType == "HR Round")
+        {
+            if (result == "Selected")
+            {
+                // Keep at HR stage - they can now generate offer
+                // No status change needed
+            }
+            else if (result == "Rejected")
+            {
+                await _statusService.ChangeCandidateStatusAsync(
+                    interview.CandidateId,
+                    "HR",
+                    "Rejected",
+                    actor
+                );
+            }
+        }
+
+        return interview;
     }
 }

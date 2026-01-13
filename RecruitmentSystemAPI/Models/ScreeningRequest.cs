@@ -6,10 +6,10 @@ public class ScreeningRequest
     public int JobId { get; set; }
     public string ReviewerName { get; set; } = default!;
 
-    // MUST be nullable so recruiter assignment works
-    public string Status { get; set; }
+    // Nullable to support both assignment (Pending) and direct screening workflows
+    public string? Status { get; set; }
     public string? Comments { get; set; }
-    public List<ScreeningSkillRequest> Skills { get; set; }
+    public List<ScreeningSkillRequest>? Skills { get; set; }
 }
 
 public class ScreeningSkillRequest

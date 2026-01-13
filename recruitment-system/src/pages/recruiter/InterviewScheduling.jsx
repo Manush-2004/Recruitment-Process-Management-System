@@ -44,11 +44,15 @@ const InterviewScheduling = () => {
       .filter(Boolean)
       .map(u => ({ name: u.fullName ?? u.full_name, email: u.email }));
 
+    // Ensure datetime-local value has seconds (format: "2024-01-15T14:30:00")
+    const formattedDateTime = scheduledAt.length === 16 ? `${scheduledAt}:00` : scheduledAt;
+
     const payload = {
       candidateId: parseInt(candidateId, 10),
       jobId: parseInt(jobId, 10),
       roundType,
-      scheduledAt: new Date(scheduledAt).toISOString(),
+      // Send datetime without timezone - backend will store as-is
+      scheduledAt: formattedDateTime,
       mode,
       meetingLink,
       interviewers: interviewerObjects

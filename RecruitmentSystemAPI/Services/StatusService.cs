@@ -24,7 +24,9 @@ public class StatusService
             CandidateId = candidateId,
             OldStatus = oldStatus,
             NewStatus = newStatus,
-            ChangedBy = changedBy
+            ChangedBy = changedBy,
+            // Explicitly set ChangedAt as Unspecified to preserve exact time without timezone conversion
+            ChangedAt = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified)
         };
 
         _db.StatusHistories.Add(history);

@@ -66,7 +66,7 @@ public class InterviewsController : ControllerBase
             return Ok(result);
         }
 
-        [Authorize(Roles = "Interviewer")]
+        [Authorize(Roles = "Interviewer,HR,Recruiter")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -85,4 +85,26 @@ public class InterviewsController : ControllerBase
             var list = all.Where(i => i.CandidateId == candidateId);
             return Ok(list);
         }
+
+        // Update interview result (HR only)
+        [Authorize(Roles = "HR")]
+        [HttpPost("{interviewId:int}/result")]
+        public async Task<IActionResult> UpdateResult(int interviewId, [FromBody] UpdateInterviewResultRequest request)
+        {
+            try
+            {
+                var actor = User.Identity?.Name ?? "HR";
+                var interview = await _service.UpdateInterviewResultAsync(interviewId, request.Result, actor);
+                return Ok(interview);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+    }
+
+    public class UpdateInterviewResultRequest
+    {
+        public string Result { get; set; } = default!; // "Selected" | "Rejected"
     }

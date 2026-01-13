@@ -1,7 +1,7 @@
 import axiosInstance from './axiosConfig.js';
 
 export const getCandidatesAtHR = async () => {
-  const res = await axiosInstance.get('/api/candidates/hr-stage');
+  const res = await axiosInstance.get('/api/candidates/hr-stage', { params: { stage: 'HR' } });
   return res.data;
 };
 
@@ -36,6 +36,11 @@ export const verifyDocument = async (candidateId, documentId, isVerified) => {
   return res.data;
 };
 
+export const updateInterviewResult = async (interviewId, result) => {
+  const res = await axiosInstance.post(`/api/interviews/${interviewId}/result`, { result });
+  return res.data;
+};
+
 export default {
   getCandidatesAtHR,
   getOffers,
@@ -43,4 +48,5 @@ export default {
   getInterviewFeedbackSummary,
   getCandidateDocuments,
   verifyDocument,
+  updateInterviewResult,
 };

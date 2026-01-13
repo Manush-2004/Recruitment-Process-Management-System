@@ -16,6 +16,9 @@ public class Interview
     public string Status { get; set; } = "Scheduled";
     // Scheduled | Completed | Cancelled
 
+    public string? Result { get; set; }
+    // null | Selected | Rejected (for HR interviews)
+
     public Candidate? Candidate { get; set; }
     public Job? Job { get; set; }
 

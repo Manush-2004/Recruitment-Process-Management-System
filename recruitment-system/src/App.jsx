@@ -15,6 +15,7 @@ import CandidateNotifications from './pages/candidate/CandidateNotifications';
 import RecruiterDashboard from './pages/recruiter/RecruiterDashboard';
 import JobsPage from './pages/recruiter/JobsPage';
 import JobCandidates from './pages/recruiter/JobCandidates';
+import JobFeedback from './pages/recruiter/JobFeedback';
 import CandidatesPage from './pages/recruiter/CandidatesPage';
 import ScreeningPage from './pages/recruiter/ScreeningPage';
 import InterviewScheduling from './pages/recruiter/InterviewScheduling';
@@ -77,6 +78,7 @@ function App() {
           <Route path="/recruiter/dashboard" element={<ProtectedRoute roles={["Recruiter"]}><RecruiterDashboard/></ProtectedRoute>} />
           <Route path="/recruiter/jobs" element={<ProtectedRoute roles={["Recruiter"]}><JobsPage/></ProtectedRoute>} />
           <Route path="/recruiter/job/:id/candidates" element={<ProtectedRoute roles={["Recruiter"]}><JobCandidates/></ProtectedRoute>} />
+          <Route path="/recruiter/job/:id/feedback" element={<ProtectedRoute roles={["Recruiter"]}><JobFeedback/></ProtectedRoute>} />
           <Route path="/recruiter/candidates" element={<ProtectedRoute roles={["Recruiter"]}><CandidatesPage/></ProtectedRoute>} />
           <Route path="/recruiter/screening" element={<ProtectedRoute roles={["Recruiter"]}><ScreeningPage/></ProtectedRoute>} />
           <Route path="/recruiter/interviews" element={<ProtectedRoute roles={["Recruiter"]}><InterviewScheduling/></ProtectedRoute>} />

@@ -35,6 +35,16 @@ Email: candidate.g@example.com
 Phone: +1-555-000-0106
 Password: P@ssw0rd!    // created by admin
 
+Name: Candidate H
+Email: candidate.h@example.com
+Phone: +1-555-000-0107
+Password: P@ssw0rd!    // created by recruiter
+
+Name: Candidate I
+Email: candidate.i@example.com
+Phone: +1-555-000-0108
+Password: P@ssw0rd!    // created by recruiter
+
 
 
 Name: Test Candidate B

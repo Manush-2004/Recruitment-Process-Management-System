@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getJobs, createJob, updateJob, deleteJob } from '../../api/recruiterApi';
 import JobForm from './JobForm';
-
+import { Link } from 'react-router-dom';
 const JobsPage = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -86,8 +86,8 @@ const JobsPage = () => {
               <div className="flex gap-2">
                 <button onClick={() => onEdit(j)} className="px-3 py-1 border rounded">Edit</button>
                 <button onClick={() => onDelete(j.id)} className="px-3 py-1 text-red-600 border rounded">Delete</button>
-                <a href={`/recruiter/job/${j.id}/candidates`} className="px-3 py-1 border rounded">View Candidates</a>
-                <a href={`/recruiter/offers?jobId=${j.id}`} className="px-3 py-1 border rounded">View Feedback</a>
+                <Link to={`/recruiter/job/${j.id}/candidates`} className="px-3 py-1 border rounded hover:bg-gray-50">View Candidates</Link>
+                <Link to={`/recruiter/job/${j.id}/feedback`} className="px-3 py-1 border rounded hover:bg-gray-50">View Feedback</Link>
               </div>
             </li>
           ))}

@@ -39,7 +39,7 @@ public class ScreeningService : IScreeningService
             // Replace skills: remove existing and add new ones
             var existingSkills = _db.ScreeningSkills.Where(ss => ss.ScreeningId == existingPending.Id);
             _db.ScreeningSkills.RemoveRange(existingSkills);
-            existingPending.Skills = request.Skills.Select(s => new ScreeningSkill
+            existingPending.Skills = (request.Skills ?? new List<ScreeningSkillRequest>()).Select(s => new ScreeningSkill
             {
                 SkillName = s.SkillName,
                 YearsOfExperience = s.YearsOfExperience,
@@ -48,7 +48,11 @@ public class ScreeningService : IScreeningService
 
             await _db.SaveChangesAsync();
 
-            await _statusService.ChangeCandidateStatusAsync(request.CandidateId, "Applied", request.Status, request.ReviewerName);
+            // Only change candidate status if a non-Pending status was provided
+            if (!string.IsNullOrEmpty(request.Status) && request.Status != "Pending")
+            {
+                await _statusService.ChangeCandidateStatusAsync(request.CandidateId, "Applied", request.Status, request.ReviewerName);
+            }
             return existingPending;
         }
         // No pending assigned screening — create new screening. For recruiter-assigned (status may be null), treat null as Pending.
@@ -59,7 +63,7 @@ public class ScreeningService : IScreeningService
             ReviewerName = request.ReviewerName,
             Status = request.Status ?? "Pending",
             Comments = request.Comments,
-            Skills = request.Skills.Select(s => new ScreeningSkill
+            Skills = (request.Skills ?? new List<ScreeningSkillRequest>()).Select(s => new ScreeningSkill
             {
                 SkillName = s.SkillName,
                 YearsOfExperience = s.YearsOfExperience,

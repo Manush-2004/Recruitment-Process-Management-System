@@ -62,6 +62,13 @@ public class ScreeningsController : ControllerBase
         var emailName = User.FindFirst(ClaimTypes.Name)?.Value;
         request.ReviewerName = fullName ?? emailName ?? request.ReviewerName;
 
+        // Reviewers must provide Status and Skills when submitting screening
+        if (string.IsNullOrEmpty(request.Status))
+            return BadRequest("Status is required for screening submission");
+
+        if (request.Skills == null)
+            return BadRequest("Skills are required for screening submission");
+
         var result = await _service.ScreenCandidateAsync(request);
         return Ok(result);
     }
@@ -72,7 +79,12 @@ public class ScreeningsController : ControllerBase
     public async Task<IActionResult> Assign(ScreeningRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.ReviewerName)) return BadRequest("ReviewerName is required");
+
+        // Set defaults for assignment workflow
         request.Status = request.Status ?? "Pending";
+        request.Skills = request.Skills ?? new List<ScreeningSkillRequest>();
+        request.Comments = request.Comments ?? string.Empty;
+
         var result = await _service.ScreenCandidateAsync(request);
         return Ok(result);
     }

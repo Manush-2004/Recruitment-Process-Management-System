@@ -157,6 +157,7 @@ public class CandidateService : ICandidateService
                         .Include(c => c.Documents)
                         .Include(c => c.Skills)
                         .Include(c => c.CandidateJobs)
+                            .ThenInclude(cj => cj.Job)
                         .AsNoTracking()
                         .FirstOrDefaultAsync(c => c.Id == id);
     }

@@ -7,7 +7,7 @@ import ScreeningList from './ScreeningList';
 
 
 const ScreeningPage = () => {
-  
+  const { user } = useAuth();
   const [candidates, setCandidates] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -77,17 +77,26 @@ const ScreeningPage = () => {
     e.preventDefault();
     if (!selectedCandidate || !selectedJob) return alert('Select candidate and job');
     if (assignToReviewer && !selectedReviewerId) return alert('Select a reviewer to assign to');
-    const reviewer = reviewers.find(r => String(r.id) === String(selectedReviewerId));
-    // ensure we always send a non-empty reviewerName when assigning
-    const reviewerName = reviewer?.fullName ?? reviewer?.full_name ?? reviewer?.email ?? (reviewer?.id ? String(reviewer.id) : undefined);
+
+    // Determine reviewerName based on workflow
+    let reviewerName;
+    if (assignToReviewer) {
+      // Assigning to a reviewer: use the selected reviewer's name
+      const reviewer = reviewers.find(r => String(r.id) === String(selectedReviewerId));
+      reviewerName = reviewer?.fullName ?? reviewer?.full_name ?? reviewer?.email ?? (reviewer?.id ? String(reviewer.id) : undefined);
+    } else {
+      // Recruiter performing screening directly: use the recruiter's own name
+      reviewerName = user?.fullName ?? user?.email ?? 'Recruiter';
+    }
 
     const payload = {
-      candidateId: selectedCandidate.id, //
-      jobId: selectedJob.id, //
-      reviewerName 
+      candidateId: selectedCandidate.id,
+      jobId: selectedJob.id,
+      reviewerName,
+      status: assignToReviewer ? 'Pending' : status,
+      comments: comments || '',
+      skills: skills || []
     };
-    // only include status when not assigning (avoid sending `status: null` which can produce model-binding issues)
-    if (!assignToReviewer) payload.status = status;
 
     try {
       console.debug('Assign payload:', payload);
@@ -95,7 +104,7 @@ const ScreeningPage = () => {
       // reload candidate screenings so recruiter immediately sees assignment
       if (selectedCandidate) {
         try {
-          const list = await reviewerApi.getForCandidate(selectedCandidate.id); //
+          const list = await reviewerApi.getForCandidate(selectedCandidate.id);
           setCandidateScreenings(list || []);
         } catch (err) {
           console.error('Failed to reload candidate screenings', err);
