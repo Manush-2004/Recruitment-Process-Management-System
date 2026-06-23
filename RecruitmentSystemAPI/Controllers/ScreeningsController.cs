@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RecruitmentSystemAPI.Models;
-using RecruitmentSystemAPI.Services;
+using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Services.Interfaces;
 using System.Security.Claims;
 
 [ApiController]

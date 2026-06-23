@@ -25,4 +25,3 @@ public class FeedbackSkillView
     public string SkillName { get; set; } = default!;
     public int Rating { get; set; }
 }
-//DTO

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RecruitmentSystemAPI.Services;
+using RecruitmentSystemAPI.Services.Interfaces;
 
 [ApiController]
 [Route("api/[controller]")]

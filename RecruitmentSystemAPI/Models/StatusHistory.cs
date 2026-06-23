@@ -12,4 +12,3 @@ public class StatusHistory
 
     public Candidate? Candidate { get; set; }
 }
-//DTO

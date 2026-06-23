@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RecruitmentSystemAPI.Models;
+using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Services.Implementations;
 
 [Authorize(Roles = "HR")]
 [ApiController]

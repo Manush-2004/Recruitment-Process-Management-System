@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RecruitmentSystemAPI.Models;
+using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Services.Interfaces;
 
 [Authorize(Roles = "Admin")]
 [ApiController]
@@ -76,9 +78,3 @@ public class AdminController : ControllerBase
         return Ok();
     }
 }
-
-// DTOs
-public class CreateUserRequest { public string FullName { get; set; } = default!; public string Email { get; set; } = default!; public string Password { get; set; } = default!; public string Role { get; set; } = "Recruiter"; public string? Phone { get; set; } }
-public class UpdateUserRequest { public string? FullName { get; set; } public bool? IsActive { get; set; } }
-public class AssignRoleRequest { public string Role { get; set; } = default!; }
-public class CreateRoleRequest { public string Role { get; set; } = default!; }

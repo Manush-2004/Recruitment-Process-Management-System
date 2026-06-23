@@ -1,5 +1,6 @@
 using FluentValidation;
 using RecruitmentSystemAPI.Models;
+using RecruitmentSystemAPI.DTOs;
 
 namespace RecruitmentSystemAPI.Validators;
 

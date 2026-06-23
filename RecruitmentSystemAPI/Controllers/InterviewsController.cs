@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RecruitmentSystemAPI.Models;
-using RecruitmentSystemAPI.Services;
+using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Services.Interfaces;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -34,77 +35,72 @@ public class InterviewsController : ControllerBase
         return Ok(interview);
     }
 
-        // Interviewer-facing endpoints
-        [Authorize(Roles = "Interviewer")]
-        [HttpGet("assigned")]
-        public async Task<IActionResult> Assigned()
+    // Interviewer-facing endpoints
+    [Authorize(Roles = "Interviewer")]
+    [HttpGet("assigned")]
+    public async Task<IActionResult> Assigned()
+    {
+        var fullName = User.FindFirst("FullName")?.Value;
+        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+        if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(fullName)) return Unauthorized();
+
+        var all = await _service.GetAllAsync();
+        var assigned = all.Where(i => i.Interviewers.Any(iv => iv.Email == email || iv.Name == fullName));
+
+        var result = new List<object>();
+        foreach (var iv in assigned)
         {
-            var fullName = User.FindFirst("FullName")?.Value;
-            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
-            if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(fullName)) return Unauthorized();
-
-            var all = await _service.GetAllAsync();
-            var assigned = all.Where(i => i.Interviewers.Any(iv => iv.Email == email || iv.Name == fullName));
-
-            var result = new List<object>();
-            foreach (var iv in assigned)
-            {
-                var has = await _feedbackService.HasSubmittedByEmailAsync(iv.Id, email ?? fullName ?? string.Empty);
-                result.Add(new {
-                    id = iv.Id,
-                    candidateId = iv.CandidateId,
-                    jobId = iv.JobId,
-                    roundType = iv.RoundType,
-                    scheduledAt = iv.ScheduledAt,
-                    interviewers = iv.Interviewers,
-                    candidate = iv.Candidate,
-                    job = iv.Job,
-                    feedbackSubmitted = has
-                });
-            }
-
-            return Ok(result);
+            var has = await _feedbackService.HasSubmittedByEmailAsync(iv.Id, email ?? fullName ?? string.Empty);
+            result.Add(new {
+                id = iv.Id,
+                candidateId = iv.CandidateId,
+                jobId = iv.JobId,
+                roundType = iv.RoundType,
+                scheduledAt = iv.ScheduledAt,
+                interviewers = iv.Interviewers,
+                candidate = iv.Candidate,
+                job = iv.Job,
+                feedbackSubmitted = has
+            });
         }
 
-        [Authorize(Roles = "Interviewer,HR,Recruiter")]
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "Interviewer,HR,Recruiter")]
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var all = await _service.GetAllAsync();
+        var interview = all.FirstOrDefault(i => i.Id == id);
+        if (interview == null) return NotFound();
+        return Ok(interview);
+    }
+
+    // Get interviews for a specific candidate (HR + Recruiter)
+    [Authorize(Roles = "HR,Recruiter")]
+    [HttpGet("for-candidate/{candidateId:int}")]
+    public async Task<IActionResult> ForCandidate(int candidateId)
+    {
+        var all = await _service.GetAllAsync();
+        var list = all.Where(i => i.CandidateId == candidateId);
+        return Ok(list);
+    }
+
+    // Update interview result (HR only)
+    [Authorize(Roles = "HR")]
+    [HttpPost("{interviewId:int}/result")]
+    public async Task<IActionResult> UpdateResult(int interviewId, [FromBody] UpdateInterviewResultRequest request)
+    {
+        try
         {
-            var all = await _service.GetAllAsync();
-            var interview = all.FirstOrDefault(i => i.Id == id);
-            if (interview == null) return NotFound();
+            var actor = User.Identity?.Name ?? "HR";
+            var interview = await _service.UpdateInterviewResultAsync(interviewId, request.Result, actor);
             return Ok(interview);
         }
-
-        // Get interviews for a specific candidate (HR + Recruiter)
-        [Authorize(Roles = "HR,Recruiter")]
-        [HttpGet("for-candidate/{candidateId:int}")]
-        public async Task<IActionResult> ForCandidate(int candidateId)
+        catch (ArgumentException ex)
         {
-            var all = await _service.GetAllAsync();
-            var list = all.Where(i => i.CandidateId == candidateId);
-            return Ok(list);
-        }
-
-        // Update interview result (HR only)
-        [Authorize(Roles = "HR")]
-        [HttpPost("{interviewId:int}/result")]
-        public async Task<IActionResult> UpdateResult(int interviewId, [FromBody] UpdateInterviewResultRequest request)
-        {
-            try
-            {
-                var actor = User.Identity?.Name ?? "HR";
-                var interview = await _service.UpdateInterviewResultAsync(interviewId, request.Result, actor);
-                return Ok(interview);
-            }
-            catch (ArgumentException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            return NotFound(ex.Message);
         }
     }
-
-    public class UpdateInterviewResultRequest
-    {
-        public string Result { get; set; } = default!; // "Selected" | "Rejected"
-    }
+}
