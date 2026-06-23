@@ -120,7 +120,10 @@ app.Lifetime.ApplicationStopping.Register(() => {
 app.Lifetime.ApplicationStopped.Register(() => Console.WriteLine("Application has stopped (ApplicationStopped event fired)."));
 
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "RecruitmentSystemAPI v1");
+});
 
 app.UseHttpsRedirection();
 app.UseCors(DevCors);

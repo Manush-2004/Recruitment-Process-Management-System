@@ -1,11 +1,4 @@
-import axiosInstance from './axiosConfig';
-import { apiRoutes } from '../config/apiRoutes';
-
-/**
- * Auth API Layer
- * Handles all authentication-related API calls
- * Matches backend AuthController endpoints exactly
- */
+import axiosInstance from "./axiosConfig";
 
 /**
  * Register a new user
@@ -25,7 +18,7 @@ export const register = async (registerData) => {
   };
   if (registerData.Phone) payload.Phone = registerData.Phone;
   if (registerData.Skills) payload.Skills = registerData.Skills;
-  const response = await axiosInstance.post(apiRoutes.auth.register, payload);
+  const response = await axiosInstance.post("/api/auth/register", payload);
   return response.data;
 };
 
@@ -37,10 +30,9 @@ export const register = async (registerData) => {
  * @returns {Promise<{token: string}>} Response with JWT token
  */
 export const login = async (loginData) => {
-  const response = await axiosInstance.post(apiRoutes.auth.login, {
+  const response = await axiosInstance.post("/api/auth/login", {
     Email: loginData.Email,
     Password: loginData.Password,
   });
   return response.data;
 };
-
