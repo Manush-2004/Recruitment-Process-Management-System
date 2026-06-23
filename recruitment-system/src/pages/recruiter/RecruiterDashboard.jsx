@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useNotifications } from '../../contexts/NotificationContext';
-import { getJobs } from '../../api/recruiterApi';
-import { getCandidates } from '../../api/recruiterApi';
+import { useEffect, useState } from "react";
+import { useNotifications } from "../../contexts/NotificationContext";
+import { getJobs } from "../../services/recruiterService";
+import { getCandidates } from "../../services/recruiterService";
 
 const RecruiterDashboard = () => {
   const [jobs, setJobs] = useState([]);
@@ -18,7 +18,7 @@ const RecruiterDashboard = () => {
         const cs = await getCandidates();
         setCandidates(cs || []);
       } catch (e) {
-        console.error('Failed to load dashboard data', e);
+        console.error("Failed to load dashboard data", e);
       } finally {
         setLoading(false);
       }
@@ -33,19 +33,27 @@ const RecruiterDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
         <div className="p-4 bg-ds-surface rounded-ds-card shadow-ds-card">
           <p className="text-sm text-ds-text-secondary">Jobs</p>
-          <p className="text-2xl font-semibold">{loading ? '...' : jobs.length}</p>
+          <p className="text-2xl font-semibold">
+            {loading ? "..." : jobs.length}
+          </p>
         </div>
         <div className="p-4 bg-ds-surface rounded-ds-card shadow-ds-card">
           <p className="text-sm text-ds-text-secondary">Active Candidates</p>
-          <p className="text-2xl font-semibold">{loading ? '...' : candidates.length}</p>
+          <p className="text-2xl font-semibold">
+            {loading ? "..." : candidates.length}
+          </p>
         </div>
         <div className="p-4 bg-ds-surface rounded-ds-card shadow-ds-card">
           <p className="text-sm text-ds-text-secondary">Interviews Scheduled</p>
-          <p className="text-2xl font-semibold">{/* backend endpoint required */ '—'}</p>
+          <p className="text-2xl font-semibold">
+            {/* backend endpoint required */ "—"}
+          </p>
         </div>
         <div className="p-4 bg-ds-surface rounded-ds-card shadow-ds-card">
           <p className="text-sm text-ds-text-secondary">Offers Released</p>
-          <p className="text-2xl font-semibold">{/* backend endpoint required */ '—'}</p>
+          <p className="text-2xl font-semibold">
+            {/* backend endpoint required */ "—"}
+          </p>
         </div>
       </div>
 
@@ -63,9 +71,13 @@ const RecruiterDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">{c.fullName}</p>
-                      <p className="text-sm text-ds-text-secondary">{c.email}</p>
+                      <p className="text-sm text-ds-text-secondary">
+                        {c.email}
+                      </p>
                     </div>
-                    <div className="text-sm text-ds-text-secondary">Added {new Date(c.createdAt).toLocaleDateString()}</div>
+                    <div className="text-sm text-ds-text-secondary">
+                      Added {new Date(c.createdAt).toLocaleDateString()}
+                    </div>
                   </div>
                 </li>
               ))}
@@ -80,11 +92,18 @@ const RecruiterDashboard = () => {
           ) : (
             <ul className="space-y-2">
               {notifications.slice(0, 6).map((n) => (
-                <li key={n.id} className="text-sm">{n.message} <div className="text-xs text-ds-text-secondary">{new Date(n.receivedAt).toLocaleString()}</div></li>
+                <li key={n.id} className="text-sm">
+                  {n.message}{" "}
+                  <div className="text-xs text-ds-text-secondary">
+                    {new Date(n.receivedAt).toLocaleString()}
+                  </div>
+                </li>
               ))}
             </ul>
           )}
-          {unread > 0 && <div className="mt-3 text-sm text-red-600">{unread} unread</div>}
+          {unread > 0 && (
+            <div className="mt-3 text-sm text-red-600">{unread} unread</div>
+          )}
         </div>
       </div>
     </div>

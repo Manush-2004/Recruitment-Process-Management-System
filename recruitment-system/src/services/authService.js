@@ -1,4 +1,4 @@
-import * as authApi from '../api/authApi';
+import axiosInstance from "../api/axiosConfig";
 
 /**
  * Auth Service Layer
@@ -14,8 +14,16 @@ import * as authApi from '../api/authApi';
  */
 export const registerUser = async (registerData) => {
   try {
-    const response = await authApi.register(registerData);
-    return response.token;
+    const payload = {
+      FullName: registerData.FullName,
+      Email: registerData.Email,
+      Password: registerData.Password,
+      Role: registerData.Role,
+    };
+    if (registerData.Phone) payload.Phone = registerData.Phone;
+    if (registerData.Skills) payload.Skills = registerData.Skills;
+    const response = await axiosInstance.post("/api/auth/register", payload);
+    return response.data.token;
   } catch (error) {
     // Transform API errors to user-friendly messages
     if (error.response?.data?.message) {
@@ -26,10 +34,13 @@ export const registerUser = async (registerData) => {
       const errorMessage = error.response.data.title || error.response.data;
       throw new Error(errorMessage);
     }
-    if (error.message === 'User already exists' || error.response?.data?.includes('already exists')) {
-      throw new Error('User already exists');
+    if (
+      error.message === "User already exists" ||
+      error.response?.data?.includes("already exists")
+    ) {
+      throw new Error("User already exists");
     }
-    throw new Error('Registration failed. Please try again.');
+    throw new Error("Registration failed. Please try again.");
   }
 };
 
@@ -41,20 +52,25 @@ export const registerUser = async (registerData) => {
  */
 export const loginUser = async (loginData) => {
   try {
-    const response = await authApi.login(loginData);
-    return response.token;
+    const response = await axiosInstance.post("/api/auth/login", {
+      Email: loginData.Email,
+      Password: loginData.Password,
+    });
+    return response.data.token;
   } catch (error) {
     // Transform API errors to user-friendly messages
     if (error.response?.data?.message) {
       throw new Error(error.response.data.message);
     }
     if (error.response?.status === 400 || error.response?.status === 401) {
-      throw new Error('Invalid credentials');
+      throw new Error("Invalid credentials");
     }
-    if (error.message?.includes('Invalid credentials') || error.response?.data?.includes('Invalid credentials')) {
-      throw new Error('Invalid credentials');
+    if (
+      error.message?.includes("Invalid credentials") ||
+      error.response?.data?.includes("Invalid credentials")
+    ) {
+      throw new Error("Invalid credentials");
     }
-    throw new Error('Login failed. Please try again.');
+    throw new Error("Login failed. Please try again.");
   }
 };
-

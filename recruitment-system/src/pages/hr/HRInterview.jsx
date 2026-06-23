@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import * as api from '../../api/hrApi.js';
-import axiosInstance from '../../api/axiosConfig.js';
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import * as api from "../../services/hrService.js";
+import axiosInstance from "../../api/axiosConfig.js";
 
 const HRInterview = () => {
   const { id } = useParams(); // interview id
@@ -25,11 +25,11 @@ const HRInterview = () => {
           setSummary(s);
         } catch (err) {
           // No feedback yet - this is okay
-          console.log('No feedback available yet for this interview');
+          console.log("No feedback available yet for this interview");
         }
       } catch (err) {
-        console.error('Failed to load interview', err);
-        setError('Failed to load interview details');
+        console.error("Failed to load interview", err);
+        setError("Failed to load interview details");
       } finally {
         setLoading(false);
       }
@@ -44,12 +44,15 @@ const HRInterview = () => {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="mb-6">
-        <Link to="/hr/dashboard" className="text-sm text-blue-600 hover:underline mb-2 inline-block">
+        <Link
+          to="/hr/dashboard"
+          className="text-sm text-blue-600 hover:underline mb-2 inline-block"
+        >
           ← Back to HR Dashboard
         </Link>
         <h1 className="text-2xl font-semibold">Interview Feedback Summary</h1>
         <p className="text-sm text-ds-text-secondary mt-1">
-          {interview.roundType} - {interview.candidate?.fullName || 'Candidate'}
+          {interview.roundType} - {interview.candidate?.fullName || "Candidate"}
         </p>
       </div>
 
@@ -60,15 +63,19 @@ const HRInterview = () => {
           <div>
             <span className="text-ds-text-secondary">Candidate:</span>
             <div className="font-medium">{interview.candidate?.fullName}</div>
-            <div className="text-ds-text-secondary">{interview.candidate?.email}</div>
+            <div className="text-ds-text-secondary">
+              {interview.candidate?.email}
+            </div>
           </div>
           <div>
             <span className="text-ds-text-secondary">Job:</span>
-            <div className="font-medium">{interview.job?.title || 'N/A'}</div>
+            <div className="font-medium">{interview.job?.title || "N/A"}</div>
           </div>
           <div>
             <span className="text-ds-text-secondary">Scheduled:</span>
-            <div className="font-medium">{new Date(interview.scheduledAt).toLocaleString()}</div>
+            <div className="font-medium">
+              {new Date(interview.scheduledAt).toLocaleString()}
+            </div>
           </div>
           <div>
             <span className="text-ds-text-secondary">Mode:</span>
@@ -78,7 +85,12 @@ const HRInterview = () => {
             <div className="col-span-2">
               <span className="text-ds-text-secondary">Meeting Link:</span>
               <div className="font-medium">
-                <a href={interview.meetingLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                <a
+                  href={interview.meetingLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
                   {interview.meetingLink}
                 </a>
               </div>
@@ -87,7 +99,9 @@ const HRInterview = () => {
           {interview.interviewers && interview.interviewers.length > 0 && (
             <div className="col-span-2">
               <span className="text-ds-text-secondary">Panel:</span>
-              <div className="font-medium">{interview.interviewers.map(i => i.name).join(', ')}</div>
+              <div className="font-medium">
+                {interview.interviewers.map((i) => i.name).join(", ")}
+              </div>
             </div>
           )}
         </div>
@@ -99,11 +113,16 @@ const HRInterview = () => {
           <h2 className="font-semibold text-lg mb-3">Feedback Summary</h2>
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-ds-text-secondary">Average Rating:</span>
-              <span className="text-2xl font-bold text-green-600">{summary.averageRating}/5</span>
+              <span className="text-sm text-ds-text-secondary">
+                Average Rating:
+              </span>
+              <span className="text-2xl font-bold text-green-600">
+                {summary.averageRating}/5
+              </span>
             </div>
             <div className="text-sm text-ds-text-secondary">
-              Based on {summary.totalFeedbacks} feedback submission{summary.totalFeedbacks !== 1 ? 's' : ''}
+              Based on {summary.totalFeedbacks} feedback submission
+              {summary.totalFeedbacks !== 1 ? "s" : ""}
             </div>
           </div>
 
@@ -112,15 +131,24 @@ const HRInterview = () => {
               <div key={idx} className="p-4 bg-gray-50 rounded">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium">{fb.interviewerName}</span>
-                  <span className="font-semibold">Rating: {fb.overallRating}/5</span>
+                  <span className="font-semibold">
+                    Rating: {fb.overallRating}/5
+                  </span>
                 </div>
-                <p className="text-sm text-ds-text-secondary mb-2">{fb.comments}</p>
+                <p className="text-sm text-ds-text-secondary mb-2">
+                  {fb.comments}
+                </p>
                 {fb.skills && fb.skills.length > 0 && (
                   <div className="mt-2">
-                    <p className="text-xs font-medium text-ds-text-secondary mb-1">Skill Ratings:</p>
+                    <p className="text-xs font-medium text-ds-text-secondary mb-1">
+                      Skill Ratings:
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {fb.skills.map((skill, sidx) => (
-                        <span key={sidx} className="text-xs bg-white px-2 py-1 rounded border">
+                        <span
+                          key={sidx}
+                          className="text-xs bg-white px-2 py-1 rounded border"
+                        >
                           {skill.skillName}: {skill.rating}/5
                         </span>
                       ))}
@@ -134,7 +162,8 @@ const HRInterview = () => {
       ) : (
         <div className="p-5 bg-yellow-50 border border-yellow-200 rounded-lg mb-6">
           <p className="text-sm text-yellow-800">
-            No feedback has been submitted yet. Waiting for interviewers to provide their feedback.
+            No feedback has been submitted yet. Waiting for interviewers to
+            provide their feedback.
           </p>
         </div>
       )}

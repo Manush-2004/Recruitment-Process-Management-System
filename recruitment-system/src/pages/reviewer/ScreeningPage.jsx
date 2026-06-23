@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import * as api from "../../api/reviewerApi.js";
+import * as api from "../../services/reviewerService.js";
 import axiosInstance from "../../api/axiosConfig.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;

@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import NavigationBar from '../../components/NavigationBar';
-import { uploadDocument } from '../../api/candidatesApi';
+import { useState } from "react";
+import NavigationBar from "../../components/NavigationBar";
+import { uploadDocument } from "../../services/candidatesService";
 
 const CandidateDocuments = () => {
   const [uploading, setUploading] = useState(false);
@@ -8,7 +8,7 @@ const CandidateDocuments = () => {
   const [error, setError] = useState(null);
 
   // show message or error as small alerts
-  const [type, setType] = useState('Resume');
+  const [type, setType] = useState("Resume");
 
   const handleFile = async (e) => {
     const f = e.target.files[0];
@@ -18,10 +18,10 @@ const CandidateDocuments = () => {
     setError(null);
     try {
       await uploadDocument(f, type);
-      setMessage('Uploaded successfully');
+      setMessage("Uploaded successfully");
     } catch (err) {
       console.error(err);
-      setError('Upload failed');
+      setError("Upload failed");
     } finally {
       setUploading(false);
     }
@@ -35,14 +35,24 @@ const CandidateDocuments = () => {
         <div className="p-6 bg-ds-surface rounded-ds-card">
           <div className="flex items-center gap-3">
             <input type="file" onChange={handleFile} disabled={uploading} />
-            <select value={type} onChange={e=>setType(e.target.value)} className="p-2 border rounded">
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="p-2 border rounded"
+            >
               <option value="Resume">Resume</option>
               <option value="Other">Other</option>
             </select>
           </div>
-          {uploading && <p className="text-sm text-ds-text-secondary">Uploading...</p>}
+          {uploading && (
+            <p className="text-sm text-ds-text-secondary">Uploading...</p>
+          )}
           {message && <p className="text-sm mt-3">{message}</p>}
-          {error && <div className="mt-3 rounded-md bg-ds-error-bg border p-3"><p className="text-sm text-ds-error">{error}</p></div>}
+          {error && (
+            <div className="mt-3 rounded-md bg-ds-error-bg border p-3">
+              <p className="text-sm text-ds-error">{error}</p>
+            </div>
+          )}
         </div>
       </main>
     </div>

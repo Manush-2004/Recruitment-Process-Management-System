@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import NavigationBar from '../../components/NavigationBar';
-import { getMe, getMyInterviews, getMyOffers, getMyStatusHistory } from '../../api/candidatesApi';
-import StatusTimeline from '../../components/StatusTimeline';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import NavigationBar from "../../components/NavigationBar";
+import {
+  getMe,
+  getMyInterviews,
+  getMyOffers,
+  getMyStatusHistory,
+} from "../../services/candidatesService";
+import StatusTimeline from "../../components/StatusTimeline";
 
 const CandidateDashboard = () => {
   const [profile, setProfile] = useState(null);
@@ -31,17 +36,22 @@ const CandidateDashboard = () => {
   // Calculate applied-jobs count following business rules described in the spec
   const computeAppliedCount = (hist = []) => {
     // Sort by ChangedAt ascending
-    const sorted = (hist || []).slice().sort((a, b) => new Date(a.changedAt) - new Date(b.changedAt));
+    const sorted = (hist || [])
+      .slice()
+      .sort((a, b) => new Date(a.changedAt) - new Date(b.changedAt));
     let count = 0;
     for (const h of sorted) {
-      const oldS = h.oldStatus ?? h.OldStatus ?? '';
-      const newS = h.newStatus ?? h.NewStatus ?? '';
+      const oldS = h.oldStatus ?? h.OldStatus ?? "";
+      const newS = h.newStatus ?? h.NewStatus ?? "";
       // Check transitions
-      if (oldS === 'Applied' && (newS === 'Shortlisted' || newS === 'On Hold')) {
+      if (
+        oldS === "Applied" &&
+        (newS === "Shortlisted" || newS === "On Hold")
+      ) {
         count += 1;
-      } else if (newS === 'Rejected') {
+      } else if (newS === "Rejected") {
         // If rejected at screening stage itself, don't decrement below 0
-        if (oldS === 'Screening' && count === 0) continue;
+        if (oldS === "Screening" && count === 0) continue;
         count = Math.max(0, count - 1);
       }
     }
@@ -55,15 +65,28 @@ const CandidateDashboard = () => {
         <h1 className="text-2xl font-semibold mb-4">Candidate Dashboard</h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <Link to="/candidate/profile" className="block p-4 bg-ds-surface rounded-ds-card shadow-ds-card hover:shadow-md transition-shadow">
+          <Link
+            to="/candidate/profile"
+            className="block p-4 bg-ds-surface rounded-ds-card shadow-ds-card hover:shadow-md transition-shadow"
+          >
             <p className="text-sm text-ds-text-secondary">Applied Jobs</p>
-            <p className="text-2xl font-semibold">{computeAppliedCount(history)}</p>
+            <p className="text-2xl font-semibold">
+              {computeAppliedCount(history)}
+            </p>
           </Link>
-          <Link to="/candidate/interviews" className="block p-4 bg-ds-surface rounded-ds-card shadow-ds-card hover:shadow-md transition-shadow">
-            <p className="text-sm text-ds-text-secondary">Interviews Scheduled</p>
+          <Link
+            to="/candidate/interviews"
+            className="block p-4 bg-ds-surface rounded-ds-card shadow-ds-card hover:shadow-md transition-shadow"
+          >
+            <p className="text-sm text-ds-text-secondary">
+              Interviews Scheduled
+            </p>
             <p className="text-2xl font-semibold">{interviews.length}</p>
           </Link>
-          <Link to="/candidate/offers" className="block p-4 bg-ds-surface rounded-ds-card shadow-ds-card hover:shadow-md transition-shadow">
+          <Link
+            to="/candidate/offers"
+            className="block p-4 bg-ds-surface rounded-ds-card shadow-ds-card hover:shadow-md transition-shadow"
+          >
             <p className="text-sm text-ds-text-secondary">Offers</p>
             <p className="text-2xl font-semibold">{offers.length}</p>
           </Link>
@@ -77,17 +100,25 @@ const CandidateDashboard = () => {
         <section>
           <h2 className="text-lg font-medium mb-3">Upcoming Interviews</h2>
           {interviews.length === 0 ? (
-            <p className="text-sm text-ds-text-secondary">No upcoming interviews</p>
+            <p className="text-sm text-ds-text-secondary">
+              No upcoming interviews
+            </p>
           ) : (
             <ul className="space-y-3">
               {interviews.map((iv) => (
                 <li key={iv.id} className="p-4 bg-ds-surface rounded-ds-card">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{iv.roundType} - {iv.job?.title}</p>
-                      <p className="text-sm text-ds-text-secondary">{new Date(iv.scheduledAt).toLocaleString()}</p>
+                      <p className="font-medium">
+                        {iv.roundType} - {iv.job?.title}
+                      </p>
+                      <p className="text-sm text-ds-text-secondary">
+                        {new Date(iv.scheduledAt).toLocaleString()}
+                      </p>
                     </div>
-                    <div className="text-sm text-ds-text-secondary">{iv.status}</div>
+                    <div className="text-sm text-ds-text-secondary">
+                      {iv.status}
+                    </div>
                   </div>
                 </li>
               ))}

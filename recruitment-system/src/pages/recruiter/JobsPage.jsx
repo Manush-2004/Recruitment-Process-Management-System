@@ -1,7 +1,12 @@
-import { useEffect, useState } from 'react';
-import { getJobs, createJob, updateJob, deleteJob } from '../../api/recruiterApi';
-import JobForm from './JobForm';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import {
+  getJobs,
+  createJob,
+  updateJob,
+  deleteJob,
+} from "../../services/recruiterService";
+import JobForm from "./JobForm";
+import { Link } from "react-router-dom";
 const JobsPage = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,8 +21,8 @@ const JobsPage = () => {
         const js = await getJobs();
         setJobs(js || []);
       } catch (e) {
-        console.error('Failed to load jobs', e);
-        setError('Failed to load jobs');
+        console.error("Failed to load jobs", e);
+        setError("Failed to load jobs");
       } finally {
         setLoading(false);
       }
@@ -25,7 +30,10 @@ const JobsPage = () => {
     load();
   }, []);
 
-  const onCreate = () => { setEditing(null); setShowForm(true); };
+  const onCreate = () => {
+    setEditing(null);
+    setShowForm(true);
+  };
 
   const onSave = async (payload) => {
     try {
@@ -39,21 +47,24 @@ const JobsPage = () => {
       setShowForm(false);
       setEditing(null);
     } catch (e) {
-      console.error('Save failed', e);
-      setError('Save failed');
+      console.error("Save failed", e);
+      setError("Save failed");
     }
   };
 
-  const onEdit = (job) => { setEditing(job); setShowForm(true); };
+  const onEdit = (job) => {
+    setEditing(job);
+    setShowForm(true);
+  };
 
   const onDelete = async (id) => {
-    if (!confirm('Delete this job?')) return;
+    if (!confirm("Delete this job?")) return;
     try {
       await deleteJob(id);
       setJobs((s) => s.filter((j) => j.id !== id));
     } catch (e) {
-      console.error('Delete failed', e);
-      setError('Delete failed');
+      console.error("Delete failed", e);
+      setError("Delete failed");
     }
   };
 
@@ -62,13 +73,27 @@ const JobsPage = () => {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">Jobs</h1>
         <div>
-          <button onClick={onCreate} className="px-4 py-2 rounded bg-blue-600 text-white">Create Job</button>
+          <button
+            onClick={onCreate}
+            className="px-4 py-2 rounded bg-blue-600 text-white"
+          >
+            Create Job
+          </button>
         </div>
       </div>
 
       {error && <div className="mb-4 text-red-600">{error}</div>}
 
-      {showForm && <JobForm initial={editing} onCancel={() => { setShowForm(false); setEditing(null); }} onSave={onSave} />}
+      {showForm && (
+        <JobForm
+          initial={editing}
+          onCancel={() => {
+            setShowForm(false);
+            setEditing(null);
+          }}
+          onSave={onSave}
+        />
+      )}
 
       {loading ? (
         <p>Loading…</p>
@@ -77,17 +102,49 @@ const JobsPage = () => {
       ) : (
         <ul className="space-y-3">
           {jobs.map((j) => (
-            <li key={j.id} className="p-4 bg-white border rounded flex items-center justify-between">
+            <li
+              key={j.id}
+              className="p-4 bg-white border rounded flex items-center justify-between"
+            >
               <div>
-                <p className="font-medium">{j.title} <span className="text-xs text-ds-text-secondary">(id:{j.id})</span></p>
-                <p className="text-sm text-ds-text-secondary">{j.description}</p>
-                <div className="text-xs text-ds-text-secondary mt-1">Required: {j.requiredSkills?.map(s => s.name).join(', ')}</div>
+                <p className="font-medium">
+                  {j.title}{" "}
+                  <span className="text-xs text-ds-text-secondary">
+                    (id:{j.id})
+                  </span>
+                </p>
+                <p className="text-sm text-ds-text-secondary">
+                  {j.description}
+                </p>
+                <div className="text-xs text-ds-text-secondary mt-1">
+                  Required: {j.requiredSkills?.map((s) => s.name).join(", ")}
+                </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => onEdit(j)} className="px-3 py-1 border rounded">Edit</button>
-                <button onClick={() => onDelete(j.id)} className="px-3 py-1 text-red-600 border rounded">Delete</button>
-                <Link to={`/recruiter/job/${j.id}/candidates`} className="px-3 py-1 border rounded hover:bg-gray-50">View Candidates</Link>
-                <Link to={`/recruiter/job/${j.id}/feedback`} className="px-3 py-1 border rounded hover:bg-gray-50">View Feedback</Link>
+                <button
+                  onClick={() => onEdit(j)}
+                  className="px-3 py-1 border rounded"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => onDelete(j.id)}
+                  className="px-3 py-1 text-red-600 border rounded"
+                >
+                  Delete
+                </button>
+                <Link
+                  to={`/recruiter/job/${j.id}/candidates`}
+                  className="px-3 py-1 border rounded hover:bg-gray-50"
+                >
+                  View Candidates
+                </Link>
+                <Link
+                  to={`/recruiter/job/${j.id}/feedback`}
+                  className="px-3 py-1 border rounded hover:bg-gray-50"
+                >
+                  View Feedback
+                </Link>
               </div>
             </li>
           ))}

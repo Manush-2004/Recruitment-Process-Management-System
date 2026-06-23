@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import * as api from '../../api/hrApi.js';
-import axiosInstance from '../../api/axiosConfig.js';
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import * as api from "../../services/hrService.js";
+import axiosInstance from "../../api/axiosConfig.js";
 
 const OfferGeneration = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const candidateId = Number(params.get('candidateId')) || null;
+  const candidateId = Number(params.get("candidateId")) || null;
 
   const [candidate, setCandidate] = useState(null);
   const [jobs, setJobs] = useState([]);
-  const [jobId, setJobId] = useState('');
-  const [salary, setSalary] = useState('');
-  const [joiningDate, setJoiningDate] = useState('');
-  const [notes, setNotes] = useState('');
+  const [jobId, setJobId] = useState("");
+  const [salary, setSalary] = useState("");
+  const [joiningDate, setJoiningDate] = useState("");
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -24,7 +24,7 @@ const OfferGeneration = () => {
         if (candidateId) {
           const [candRes, jobsRes] = await Promise.all([
             axiosInstance.get(`/api/candidates/${candidateId}`),
-            axiosInstance.get('/api/jobs')
+            axiosInstance.get("/api/jobs"),
           ]);
           setCandidate(candRes.data);
           setJobs(jobsRes.data || []);
@@ -35,7 +35,7 @@ const OfferGeneration = () => {
           }
         }
       } catch (err) {
-        console.error('Failed to load data', err);
+        console.error("Failed to load data", err);
       } finally {
         setInitialLoading(false);
       }
@@ -45,7 +45,7 @@ const OfferGeneration = () => {
 
   const submit = async () => {
     if (!candidateId || !jobId || !salary || !joiningDate) {
-      alert('Please fill all required fields');
+      alert("Please fill all required fields");
       return;
     }
 
@@ -56,16 +56,19 @@ const OfferGeneration = () => {
         jobId: parseInt(jobId, 10),
         salary: parseFloat(salary),
         joiningDate,
-        notes
+        notes,
       };
       const res = await api.generateOffer(payload);
-      alert('Offer generated successfully!');
+      alert("Offer generated successfully!");
       // Open PDF preview if backend returns a path
-      if (res.offerPdfPath) window.open(res.offerPdfPath, '_blank');
-      navigate('/hr/dashboard');
+      if (res.offerPdfPath) window.open(res.offerPdfPath, "_blank");
+      navigate("/hr/dashboard");
     } catch (err) {
-      console.error('Failed to generate offer', err);
-      alert('Failed to generate offer: ' + (err.response?.data?.message || err.message));
+      console.error("Failed to generate offer", err);
+      alert(
+        "Failed to generate offer: " +
+          (err.response?.data?.message || err.message),
+      );
     } finally {
       setLoading(false);
     }
@@ -76,7 +79,10 @@ const OfferGeneration = () => {
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
       <div className="mb-6">
-        <Link to="/hr/dashboard" className="text-sm text-blue-600 hover:underline mb-2 inline-block">
+        <Link
+          to="/hr/dashboard"
+          className="text-sm text-blue-600 hover:underline mb-2 inline-block"
+        >
           ← Back to HR Dashboard
         </Link>
         <h1 className="text-2xl font-semibold">Generate Offer</h1>
@@ -90,7 +96,9 @@ const OfferGeneration = () => {
       <div className="p-6 bg-white border rounded-lg shadow-sm">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Job Position *</label>
+            <label className="block text-sm font-medium mb-1">
+              Job Position *
+            </label>
             <select
               value={jobId}
               onChange={(e) => setJobId(e.target.value)}
@@ -98,7 +106,7 @@ const OfferGeneration = () => {
               required
             >
               <option value="">Select a job</option>
-              {jobs.map(j => (
+              {jobs.map((j) => (
                 <option key={j.id} value={j.id}>
                   {j.title} - {j.companyName}
                 </option>
@@ -107,7 +115,9 @@ const OfferGeneration = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Salary (Annual) *</label>
+            <label className="block text-sm font-medium mb-1">
+              Salary (Annual) *
+            </label>
             <input
               type="number"
               value={salary}
@@ -119,7 +129,9 @@ const OfferGeneration = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Joining Date *</label>
+            <label className="block text-sm font-medium mb-1">
+              Joining Date *
+            </label>
             <input
               type="date"
               value={joiningDate}
@@ -130,7 +142,9 @@ const OfferGeneration = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Additional Notes</label>
+            <label className="block text-sm font-medium mb-1">
+              Additional Notes
+            </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -146,10 +160,10 @@ const OfferGeneration = () => {
               onClick={submit}
               className="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Generating...' : 'Generate Offer'}
+              {loading ? "Generating..." : "Generate Offer"}
             </button>
             <button
-              onClick={() => navigate('/hr/dashboard')}
+              onClick={() => navigate("/hr/dashboard")}
               className="px-6 py-2 border rounded hover:bg-gray-50"
             >
               Cancel
