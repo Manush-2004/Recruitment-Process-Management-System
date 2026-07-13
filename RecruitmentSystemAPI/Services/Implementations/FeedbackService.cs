@@ -1,30 +1,29 @@
-using RecruitmentSystemAPI.Data;
 using RecruitmentSystemAPI.DTOs;
 using RecruitmentSystemAPI.Models;
+using RecruitmentSystemAPI.Repositories.Interfaces;
 using RecruitmentSystemAPI.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace RecruitmentSystemAPI.Services.Implementations;
 
 public class FeedbackService : IFeedbackService
 {
-    private readonly AppDbContext _db;
+    private readonly IFeedbackRepository _feedbackRepo;
+    private readonly IAuthRepository _authRepo;
 
-    public FeedbackService(AppDbContext db)
+    public FeedbackService(IFeedbackRepository feedbackRepo, IAuthRepository authRepo)
     {
-        _db = db;
+        _feedbackRepo = feedbackRepo;
+        _authRepo = authRepo;
     }
 
     public async Task<bool> HasSubmittedAsync(int interviewId, int interviewerUserId)
     {
-        return await _db.InterviewFeedbacks
-            .AnyAsync(f => f.InterviewId == interviewId &&
-                           f.InterviewerUserId == interviewerUserId);
+        return await _feedbackRepo.HasSubmittedAsync(interviewId, interviewerUserId);
     }
 
     public async Task<bool> HasSubmittedByEmailAsync(int interviewId, string email)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await _authRepo.GetUserByEmailWithRolesAsync(email);
         if (user == null) return false;
         return await HasSubmittedAsync(interviewId, user.Id);
     }
@@ -34,7 +33,7 @@ public class FeedbackService : IFeedbackService
         if (await HasSubmittedAsync(req.InterviewId, req.InterviewerUserId))
             throw new Exception("Feedback already submitted by this interviewer.");
 
-        var interviewer = await _db.Users.FindAsync(req.InterviewerUserId)
+        var interviewer = await _authRepo.GetUserByIdAsync(req.InterviewerUserId)
             ?? throw new Exception("Interviewer not found");
         var feedback = new InterviewFeedback
         {
@@ -50,19 +49,12 @@ public class FeedbackService : IFeedbackService
             }).ToList()
         };
 
-        _db.InterviewFeedbacks.Add(feedback);
-        await _db.SaveChangesAsync();
+        await _feedbackRepo.AddFeedbackAsync(feedback);
     }
 
     public async Task<InterviewFeedbackSummary> GetInterviewSummaryAsync(int interviewId)
     {
-        var feedbacks = await _db.InterviewFeedbacks
-            .Where(f => f.InterviewId == interviewId)
-            .Include(f => f.Skills)
-            .Include(f => f.Interview)
-                .ThenInclude(i => i.Candidate)
-            .AsNoTracking()
-            .ToListAsync();
+        var feedbacks = (await _feedbackRepo.GetFeedbacksByInterviewIdAsync(interviewId)).ToList();
 
         if (!feedbacks.Any())
             throw new Exception("No feedback available for this interview");
@@ -96,13 +88,7 @@ public class FeedbackService : IFeedbackService
     // New: aggregate across all interviews for a candidate+job
     public async Task<InterviewFeedbackSummary> GetInterviewSummaryByCandidateJobAsync(int candidateId, int jobId)
     {
-        var feedbacks = await _db.InterviewFeedbacks
-            .Include(f => f.Skills)
-            .Include(f => f.Interview)
-                .ThenInclude(i => i.Candidate)
-            .Where(f => f.Interview != null && f.Interview.CandidateId == candidateId && f.Interview.JobId == jobId)
-            .AsNoTracking()
-            .ToListAsync();
+        var feedbacks = (await _feedbackRepo.GetFeedbacksByCandidateAndJobAsync(candidateId, jobId)).ToList();
 
         if (!feedbacks.Any())
             throw new Exception("No feedback available for this candidate and job");

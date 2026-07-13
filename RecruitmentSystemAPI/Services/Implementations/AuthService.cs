@@ -1,9 +1,8 @@
 using BCrypt.Net;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using RecruitmentSystemAPI.Data;
 using RecruitmentSystemAPI.DTOs;
 using RecruitmentSystemAPI.Models;
+using RecruitmentSystemAPI.Repositories.Interfaces;
 using RecruitmentSystemAPI.Services.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -13,22 +12,23 @@ namespace RecruitmentSystemAPI.Services.Implementations;
 
 public class AuthService : IAuthService
 {
-    private readonly AppDbContext _db;
+    private readonly IAuthRepository _authRepo;
+    private readonly ICandidateRepository _candidateRepo;
     private readonly IConfiguration _config;
 
-    public AuthService(AppDbContext db, IConfiguration config)
+    public AuthService(IAuthRepository authRepo, ICandidateRepository candidateRepo, IConfiguration config)
     {
-        _db = db;
+        _authRepo = authRepo;
+        _candidateRepo = candidateRepo;
         _config = config;
     }
 
     public async Task<string> RegisterAsync(RegisterRequest req)
     {
-        if (await _db.Users.AnyAsync(u => u.Email == req.Email))
+        if (await _authRepo.UserExistsAsync(req.Email))
             throw new Exception("User already exists");
 
-        var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == req.Role)
-                   ?? new Role { Name = req.Role };
+        var role = await _authRepo.GetOrCreateRoleAsync(req.Role);
 
         var user = new User
         {
@@ -39,22 +39,21 @@ public class AuthService : IAuthService
 
         user.UserRoles.Add(new UserRole { Role = role });
 
-        _db.Users.Add(user);
-        await _db.SaveChangesAsync();
+        await _authRepo.AddUserAsync(user);
 
         // If this is a Candidate registration, ensure Candidate profile is created and add phone/skills
         if (string.Equals(req.Role, "Candidate", StringComparison.OrdinalIgnoreCase))
         {
-            var existing = await _db.Candidates.FirstOrDefaultAsync(c => c.Email == req.Email);
+            var existing = await _candidateRepo.GetByEmailAsync(req.Email);
             if (existing == null)
             {
                 var cand = new Candidate { FullName = req.FullName, Email = req.Email, Phone = req.Phone };
-                _db.Candidates.Add(cand);
-                await _db.SaveChangesAsync();
+                await _candidateRepo.AddAsync(cand);
 
                 if (!string.IsNullOrWhiteSpace(req.Skills))
                 {
                     var parts = req.Skills.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    var newSkills = new List<CandidateSkill>();
                     foreach (var p in parts)
                     {
                         var seg = p.Split(':', StringSplitOptions.RemoveEmptyEntries);
@@ -62,15 +61,17 @@ public class AuthService : IAuthService
                         var years = 0;
                         if (seg.Length > 1 && int.TryParse(seg[1].Trim(), out var y)) years = y;
                         if (string.IsNullOrWhiteSpace(name)) continue;
-                        _db.CandidateSkills.Add(new CandidateSkill { CandidateId = cand.Id, Name = name, Years = years });
+                        newSkills.Add(new CandidateSkill { CandidateId = cand.Id, Name = name, Years = years });
                     }
-                    await _db.SaveChangesAsync();
+                    if (newSkills.Any())
+                    {
+                        await _candidateRepo.AddSkillsAsync(newSkills);
+                    }
                 }
             }
             else if (!string.IsNullOrWhiteSpace(req.Phone) && string.IsNullOrWhiteSpace(existing.Phone))
             {
-                existing.Phone = req.Phone;
-                await _db.SaveChangesAsync();
+                await _candidateRepo.UpdatePhoneAsync(existing, req.Phone);
             }
         }
 
@@ -79,9 +80,7 @@ public class AuthService : IAuthService
 
     public async Task<string> LoginAsync(LoginRequest req)
     {
-        var user = await _db.Users
-            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.Email == req.Email);
+        var user = await _authRepo.GetUserByEmailWithRolesAsync(req.Email);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
             throw new Exception("Invalid credentials");
@@ -91,7 +90,7 @@ public class AuthService : IAuthService
 
     public async Task<User?> GetUserByEmailAsync(string email)
     {
-        return await _db.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Email == email);
+        return await _authRepo.GetUserByEmailWithRolesAsync(email);
     }
 
     private string GenerateToken(User user)

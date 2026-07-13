@@ -1,29 +1,30 @@
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using RecruitmentSystemAPI.Data;
 using RecruitmentSystemAPI.DTOs;
 using RecruitmentSystemAPI.Models;
-using Microsoft.EntityFrameworkCore;
+using RecruitmentSystemAPI.Repositories.Interfaces;
 
 namespace RecruitmentSystemAPI.Services.Implementations;
 
 public class OfferService
 {
-    private readonly AppDbContext _db;
+    private readonly IOfferRepository _offerRepo;
+    private readonly ICandidateRepository _candidateRepo;
     private readonly IWebHostEnvironment _env;
     private readonly StatusService _statusService;
 
-    public OfferService(AppDbContext db, IWebHostEnvironment env, StatusService statusService)
+    public OfferService(IOfferRepository offerRepo, ICandidateRepository candidateRepo, IWebHostEnvironment env, StatusService statusService)
     {
-        _db = db;
+        _offerRepo = offerRepo;
+        _candidateRepo = candidateRepo;
         _env = env;
         _statusService = statusService;
     }
 
     public async Task<Offer> CreateOfferAsync(OfferRequest req)
     {
-        var candidate = await _db.Candidates.FindAsync(req.CandidateId)
+        var candidate = await _candidateRepo.GetByIdAsync(req.CandidateId)
             ?? throw new Exception("Candidate not found");
 
         var fileName = $"Offer_{candidate.FullName.Replace(" ", "_")}.pdf";
@@ -56,8 +57,7 @@ public class OfferService
             OfferPdfPath = "/offers/" + fileName
         };
 
-        _db.Offers.Add(offer);
-        await _db.SaveChangesAsync();
+        await _offerRepo.AddAsync(offer);
 
         await _statusService.ChangeCandidateStatusAsync(
             req.CandidateId,
@@ -71,10 +71,6 @@ public class OfferService
 
     public async Task<IEnumerable<Offer>> GetAllAsync()
     {
-        return await _db.Offers
-                        .Include(o => o.Candidate)
-                        .OrderByDescending(o => o.CreatedAt)
-                        .AsNoTracking()
-                        .ToListAsync();
+        return await _offerRepo.GetAllAsync();
     }
 }

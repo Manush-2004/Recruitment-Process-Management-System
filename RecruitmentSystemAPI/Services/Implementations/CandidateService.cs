@@ -1,16 +1,20 @@
 using RecruitmentSystemAPI.Models;
-using RecruitmentSystemAPI.Data;
 using RecruitmentSystemAPI.DTOs;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using OfficeOpenXml;
 using RecruitmentSystemAPI.Services.Interfaces;
+using RecruitmentSystemAPI.Repositories.Interfaces;
 
 namespace RecruitmentSystemAPI.Services.Implementations;
 
 public class CandidateService : ICandidateService
 {
-    private readonly AppDbContext _db;
+    private readonly ICandidateRepository _candidateRepo;
+    private readonly IInterviewRepository _interviewRepo;
+    private readonly IOfferRepository _offerRepo;
+    private readonly IStatusRepository _statusRepo;
+    private readonly IAuthRepository _authRepo;
+    private readonly IJobRepository _jobRepo;
     private readonly IWebHostEnvironment _env;
     private readonly ILogger<CandidateService> _logger;
     private readonly IAuthService _authService;
@@ -21,9 +25,14 @@ public class CandidateService : ICandidateService
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
     }
 
-    public CandidateService(AppDbContext db, IWebHostEnvironment env, ILogger<CandidateService> logger, IAuthService authService, StatusService statusService)
+    public CandidateService(ICandidateRepository candidateRepo, IInterviewRepository interviewRepo, IOfferRepository offerRepo, IStatusRepository statusRepo, IAuthRepository authRepo, IJobRepository jobRepo, IWebHostEnvironment env, ILogger<CandidateService> logger, IAuthService authService, StatusService statusService)
     {
-        _db = db;
+        _candidateRepo = candidateRepo;
+        _interviewRepo = interviewRepo;
+        _offerRepo = offerRepo;
+        _statusRepo = statusRepo;
+        _authRepo = authRepo;
+        _jobRepo = jobRepo;
         _env = env;
         _logger = logger;
         _authService = authService;
@@ -35,7 +44,7 @@ public class CandidateService : ICandidateService
         try
         {
             // Prevent duplicate candidate or user
-            if (await _db.Candidates.AnyAsync(c => c.Email == dto.Email))
+            if (await _candidateRepo.ExistsByEmailAsync(dto.Email))
                 throw new ArgumentException("User already exists");
             if (await _authService.GetUserByEmailAsync(dto.Email) != null)
                 throw new ArgumentException("User already exists");
@@ -47,8 +56,7 @@ public class CandidateService : ICandidateService
                 Phone = dto.Phone
             };
 
-            _db.Candidates.Add(candidate);
-            await _db.SaveChangesAsync(ct);  // to get candidate.Id
+            await _candidateRepo.AddAsync(candidate);
 
             if (!string.IsNullOrWhiteSpace(dto.Skills))
             {
@@ -65,8 +73,7 @@ public class CandidateService : ICandidateService
                 }
                 if (candidateSkills.Count > 0)
                 {
-                    _db.CandidateSkills.AddRange(candidateSkills);
-                    await _db.SaveChangesAsync(ct);
+                    await _candidateRepo.AddSkillsAsync(candidateSkills);
                 }
             }
 
@@ -77,7 +84,7 @@ public class CandidateService : ICandidateService
                 Directory.CreateDirectory(uploadsRoot);
 
                 // Before saving, remove previous resume files (heuristic: Type == "Resume" or filename contains "resume")
-                var prevResumes = await _db.CandidateDocuments.Where(d => d.CandidateId == candidate.Id && (d.FileName.ToLower().Contains("resume") )).ToListAsync(ct);
+                var prevResumes = await _candidateRepo.GetOldResumesAsync(candidate.Id);
                 foreach (var pr in prevResumes)
                 {
                     try
@@ -89,7 +96,10 @@ public class CandidateService : ICandidateService
                     {
                         _logger.LogWarning(ex, "Failed to delete old resume file {Path}", pr.FilePath);
                     }
-                    _db.CandidateDocuments.Remove(pr);
+                }
+                if (prevResumes.Any())
+                {
+                    await _candidateRepo.RemoveDocumentsAsync(prevResumes);
                 }
 
                 // sanitize and create filename
@@ -112,8 +122,7 @@ public class CandidateService : ICandidateService
                     Size = file.Length
                 };
 
-                _db.CandidateDocuments.Add(doc);
-                await _db.SaveChangesAsync(ct);
+                await _candidateRepo.AddDocumentAsync(doc);
             }
 
             // If a password was provided, create a User account for this candidate
@@ -133,11 +142,7 @@ public class CandidateService : ICandidateService
             }
 
             // reload with documents and skills
-            return await _db.Candidates
-                         .Include(c => c.Documents)
-                         .Include(c => c.Skills)
-                         .AsNoTracking()
-                         .FirstAsync(c => c.Id == candidate.Id, ct);
+            return await _candidateRepo.GetByIdWithDetailsAsync(candidate.Id) ?? candidate;
         }
         catch (ArgumentException) { throw; }
         catch (Exception ex)
@@ -149,58 +154,33 @@ public class CandidateService : ICandidateService
 
     public async Task<IEnumerable<Candidate>> GetAllAsync()
     {
-        return await _db.Candidates.Include(c => c.Documents).OrderByDescending(c => c.CreatedAt).ToListAsync();
+        return await _candidateRepo.GetAllWithDocumentsAsync();
     }
 
     public async Task<Candidate?> GetAsync(int id)
     {
-        return await _db.Candidates
-                        .Include(c => c.Documents)
-                        .Include(c => c.Skills)
-                        .Include(c => c.CandidateJobs)
-                            .ThenInclude(cj => cj.Job)
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(c => c.Id == id);
+        return await _candidateRepo.GetByIdWithDetailsAsync(id);
     }
 
     public async Task<Candidate?> GetByEmailAsync(string email)
     {
         if (string.IsNullOrWhiteSpace(email)) return null;
-        return await _db.Candidates
-                        .Include(c => c.Documents)
-                        .Include(c => c.Skills)
-                        .Include(c => c.CandidateJobs)
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(c => c.Email == email);
+        return await _candidateRepo.GetByEmailWithDetailsAsync(email);
     }
 
     public async Task<IEnumerable<Interview>> GetInterviewsForCandidateAsync(int candidateId)
     {
-        return await _db.Interviews
-                        .Include(i => i.Interviewers)
-                        .Include(i => i.Job)
-                        .Where(i => i.CandidateId == candidateId)
-                        .OrderBy(i => i.ScheduledAt)
-                        .AsNoTracking()
-                        .ToListAsync();
+        return await _interviewRepo.GetInterviewsForCandidateAsync(candidateId);
     }
 
     public async Task<IEnumerable<Offer>> GetOffersForCandidateAsync(int candidateId)
     {
-        return await _db.Offers
-                        .Where(o => o.CandidateId == candidateId)
-                        .OrderByDescending(o => o.CreatedAt)
-                        .AsNoTracking()
-                        .ToListAsync();
+        return await _offerRepo.GetOffersForCandidateAsync(candidateId);
     }
 
     public async Task<IEnumerable<StatusHistory>> GetStatusHistoryForCandidateAsync(int candidateId)
     {
-        return await _db.StatusHistories
-                        .Where(s => s.CandidateId == candidateId)
-                        .OrderByDescending(s => s.Id)
-                        .AsNoTracking()
-                        .ToListAsync();
+        return await _statusRepo.GetStatusHistoryForCandidateAsync(candidateId);
     }
 
     public async Task<CandidateDocument> UploadDocumentAsync(int candidateId, IFormFile file, string? type = null, CancellationToken ct = default)
@@ -210,7 +190,7 @@ public class CandidateService : ICandidateService
         // If uploading a resume (type == "Resume"), remove previous resume docs
         if (!string.IsNullOrWhiteSpace(type) && string.Equals(type, "Resume", StringComparison.OrdinalIgnoreCase))
         {
-            var prevResumes = await _db.CandidateDocuments.Where(d => d.CandidateId == candidateId && (d.FileName.ToLower().Contains("resume") || d.FilePath.ToLower().Contains("resume"))).ToListAsync(ct);
+            var prevResumes = await _candidateRepo.GetOldResumesAsync(candidateId);
             foreach (var pr in prevResumes)
             {
                 try
@@ -222,11 +202,13 @@ public class CandidateService : ICandidateService
                 {
                     _logger.LogWarning(ex, "Failed to delete old resume file {Path}", pr.FilePath);
                 }
-                _db.CandidateDocuments.Remove(pr);
             }
-            await _db.SaveChangesAsync(ct);
+            if (prevResumes.Any())
+            {
+                await _candidateRepo.RemoveDocumentsAsync(prevResumes);
+            }
         }
-        var candidate = await _db.Candidates.FindAsync(new object[] { candidateId }, ct);
+        var candidate = await _candidateRepo.GetByIdAsync(candidateId);
         if (candidate == null) throw new ArgumentException("Candidate not found");
 
         var uploadsRoot = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads", "documents", candidateId.ToString());
@@ -251,8 +233,7 @@ public class CandidateService : ICandidateService
             Size = file.Length
         };
 
-        _db.CandidateDocuments.Add(doc);
-        await _db.SaveChangesAsync(ct);
+        await _candidateRepo.AddDocumentAsync(doc);
 
         return doc;
     }
@@ -260,14 +241,11 @@ public class CandidateService : ICandidateService
     // Move candidate to HR stage (called by recruiter after reviewing feedback)
     public async Task MoveCandidateToHrAsync(int candidateId, string actor)
     {
-        var cand = await _db.Candidates.FindAsync(candidateId);
+        var cand = await _candidateRepo.GetByIdAsync(candidateId);
         if (cand == null) throw new ArgumentException("Candidate not found");
 
-        var latest = await _db.StatusHistories
-            .Where(s => s.CandidateId == candidateId)
-            .OrderByDescending(s => s.ChangedAt)
-            .Select(s => s.NewStatus)
-            .FirstOrDefaultAsync();
+        var latest = (await _statusRepo.GetStatusHistoryForCandidateAsync(candidateId))
+            .FirstOrDefault()?.NewStatus;
 
         var oldStatus = latest ?? "Applied";
         await _statusService.ChangeCandidateStatusAsync(candidateId, oldStatus, "HR", actor);
@@ -275,61 +253,40 @@ public class CandidateService : ICandidateService
 
     public async Task AddSkillsForCandidateAsync(int candidateId, List<CandidateSkill> skills)
     {
-        var candidate = await _db.Candidates.Include(c => c.Skills).FirstOrDefaultAsync(c => c.Id == candidateId);
+        var candidate = await _candidateRepo.GetByIdWithSkillsAsync(candidateId);
         if (candidate == null) throw new ArgumentException("Candidate not found");
 
+        var newSkills = new List<CandidateSkill>();
         foreach (var sk in skills)
         {
             if (candidate.Skills.Any(s => s.Name.Equals(sk.Name, StringComparison.OrdinalIgnoreCase))) continue;
             sk.CandidateId = candidateId;
-            _db.CandidateSkills.Add(sk);
+            newSkills.Add(sk);
         }
-        await _db.SaveChangesAsync();
+        if (newSkills.Any())
+        {
+            await _candidateRepo.AddSkillsAsync(newSkills);
+        }
     }
 
     public async Task UpdateSkillsForCandidateAsync(int candidateId, List<CandidateSkill> skills)
     {
-        var candidate = await _db.Candidates.Include(c => c.Skills).FirstOrDefaultAsync(c => c.Id == candidateId);
+        var candidate = await _candidateRepo.GetByIdWithSkillsAsync(candidateId);
         if (candidate == null) throw new ArgumentException("Candidate not found");
 
-        foreach (var sk in skills)
-        {
-            if (sk.Id != 0)
-            {
-                var existing = candidate.Skills.FirstOrDefault(s => s.Id == sk.Id);
-                if (existing == null) throw new ArgumentException($"Skill with id {sk.Id} not found");
-                existing.Name = sk.Name ?? existing.Name;
-                existing.Years = sk.Years;
-            }
-            else if (!string.IsNullOrWhiteSpace(sk.Name))
-            {
-                var existingByName = candidate.Skills.FirstOrDefault(s => s.Name.Equals(sk.Name, StringComparison.OrdinalIgnoreCase));
-                if (existingByName != null)
-                {
-                    existingByName.Years = sk.Years;
-                }
-                else
-                {
-                    sk.CandidateId = candidateId;
-                    _db.CandidateSkills.Add(sk);
-                }
-            }
-        }
-
-        await _db.SaveChangesAsync();
+        await _candidateRepo.UpdateSkillsAsync(candidate, skills);
     }
 
     public async Task RemoveSkillAsync(int candidateId, int skillId)
     {
-        var skill = await _db.CandidateSkills.FirstOrDefaultAsync(s => s.Id == skillId && s.CandidateId == candidateId);
+        var skill = await _candidateRepo.GetSkillAsync(candidateId, skillId);
         if (skill == null) throw new ArgumentException("Skill not found");
-        _db.CandidateSkills.Remove(skill);
-        await _db.SaveChangesAsync();
+        await _candidateRepo.RemoveSkillAsync(skill);
     }
 
     public async Task<Candidate> UpdateCandidateAsync(int candidateId, UpdateCandidateRequest req)
     {
-        var candidate = await _db.Candidates.Include(c => c.Documents).Include(c => c.Skills).FirstOrDefaultAsync(c => c.Id == candidateId);
+        var candidate = await _candidateRepo.GetByIdWithDetailsAsync(candidateId);
         if (candidate == null) throw new ArgumentException("Candidate not found");
 
         // Only allow updating certain fields for now. Ignore nulls.
@@ -338,45 +295,27 @@ public class CandidateService : ICandidateService
             candidate.Phone = req.Phone;
         }
 
-        await _db.SaveChangesAsync();
+        await _candidateRepo.UpdateCandidateAsync(candidate);
 
-        // Return a detached copy with related collections
-        return await _db.Candidates.Include(c => c.Documents).Include(c => c.Skills).AsNoTracking().FirstAsync(c => c.Id == candidateId);
+        return candidate;
     }
 
     public async Task<IEnumerable<Candidate>> GetCandidatesAtStageAsync(string stage)
     {
-        // Compute latest status per candidate using group max then pick the row with that timestamp
-        var allStatuses = await _db.StatusHistories.AsNoTracking().ToListAsync();
-
-        var latestIds = allStatuses
-            .GroupBy(s => s.CandidateId)
-            .Select(g => g.OrderByDescending(s => s.ChangedAt).First())
-            .Where(s => s.NewStatus == stage)
-            .Select(s => s.CandidateId)
-            .ToList();
-
-        return await _db.Candidates
-                        .Where(c => latestIds.Contains(c.Id))
-                        .Include(c => c.Documents)
-                        .AsNoTracking()
-                        .ToListAsync();
+        return await _candidateRepo.GetCandidatesAtStageAsync(stage);
     }
 
     public async Task<IEnumerable<CandidateDocument>> GetCandidateDocumentsAsync(int candidateId)
     {
-        return await _db.CandidateDocuments
-                        .Where(d => d.CandidateId == candidateId)
-                        .AsNoTracking()
-                        .ToListAsync();
+        return await _candidateRepo.GetDocumentsByCandidateIdAsync(candidateId);
     }
 
     public async Task<CandidateDocument> VerifyDocumentAsync(int candidateId, int documentId, bool verified)
     {
-        var doc = await _db.CandidateDocuments.FirstOrDefaultAsync(d => d.Id == documentId && d.CandidateId == candidateId);
+        var doc = await _candidateRepo.GetDocumentAsync(candidateId, documentId);
         if (doc == null) throw new ArgumentException("Document not found");
         doc.Verified = verified;
-        await _db.SaveChangesAsync();
+        await _candidateRepo.UpdateDocumentAsync(doc);
         return doc;
     }
 
@@ -431,9 +370,9 @@ public class CandidateService : ICandidateService
         result.TotalRows = rowCount - 1;
 
         // Load all jobs and their required skills into memory for matching
-        var jobs = await _db.Jobs.Include(j => j.RequiredSkills).ToListAsync(ct);
+        var jobs = await _jobRepo.GetAllJobsWithSkillsAsync();
 
-        using var trx = await _db.Database.BeginTransactionAsync(ct);
+        await _candidateRepo.BeginTransactionAsync(ct);
 
         for (int r = 2; r <= rowCount; r++)
         {
@@ -457,7 +396,7 @@ public class CandidateService : ICandidateService
                 }
 
                 // detect duplicates
-                if (await _db.Candidates.AnyAsync(c => c.Email == email, ct) || await _db.Users.AnyAsync(u => u.Email == email, ct))
+                if (await _candidateRepo.ExistsByEmailAsync(email) || await _authRepo.UserExistsAsync(email))
                 {
                     result.Errors.Add($"Row {r}: User already exists ({email}).");
                     continue;
@@ -470,8 +409,7 @@ public class CandidateService : ICandidateService
                     Email = email,
                     Phone = phone
                 };
-                _db.Candidates.Add(cand);
-                await _db.SaveChangesAsync(ct); // to get cand.Id
+                await _candidateRepo.AddAsync(cand); // to get cand.Id
 
                 // parse skills
                 var candidateSkills = new List<CandidateSkill>();
@@ -491,8 +429,7 @@ public class CandidateService : ICandidateService
 
                 if (candidateSkills.Count > 0)
                 {
-                    _db.CandidateSkills.AddRange(candidateSkills);
-                    await _db.SaveChangesAsync(ct);
+                    await _candidateRepo.AddSkillsAsync(candidateSkills);
                 }
 
                 // register user for candidate using provided password
@@ -531,16 +468,15 @@ public class CandidateService : ICandidateService
                     if (matches)
                     {
                         // Avoid duplicate links
-                        var already = await _db.CandidateJobs.AnyAsync(cj => cj.CandidateId == cand.Id && cj.JobId == job.Id, ct);
+                        var already = await _candidateRepo.HasJobLinkAsync(cand.Id, job.Id);
                         if (!already)
                         {
-                            _db.CandidateJobs.Add(new CandidateJob { CandidateId = cand.Id, JobId = job.Id });
+                            await _candidateRepo.AddJobLinkAsync(new CandidateJob { CandidateId = cand.Id, JobId = job.Id });
                             linked++;
                         }
                     }
                 }
 
-                if (linked > 0) await _db.SaveChangesAsync(ct);
                 result.LinkedCount += linked;
             }
             catch (Exception ex)
@@ -552,11 +488,11 @@ public class CandidateService : ICandidateService
 
         if (result.Errors.Count == 0)
         {
-            await trx.CommitAsync(ct);
+            await _candidateRepo.CommitTransactionAsync(ct);
         }
         else
         {
-            await trx.RollbackAsync(ct);
+            await _candidateRepo.RollbackTransactionAsync(ct);
         }
 
         return result;

@@ -5,6 +5,8 @@ using RecruitmentSystemAPI.Data;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.Services.Interfaces;
 using RecruitmentSystemAPI.Services.Implementations;
+using RecruitmentSystemAPI.Repositories.Interfaces;
+using RecruitmentSystemAPI.Repositories.Implementations;
 using RecruitmentSystemAPI.Validators;
 using OfficeOpenXml;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -32,6 +34,16 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddScoped<IJobRepository, JobRepository>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<ICandidateRepository, CandidateRepository>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddScoped<IInterviewRepository, InterviewRepository>();
+builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+builder.Services.AddScoped<IOfferRepository, OfferRepository>();
+builder.Services.AddScoped<IScreeningRepository, ScreeningRepository>();
+builder.Services.AddScoped<IStatusRepository, StatusRepository>();
 
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<ICandidateService, CandidateService>();

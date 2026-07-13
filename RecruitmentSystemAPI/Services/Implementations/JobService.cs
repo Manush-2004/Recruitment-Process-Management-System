@@ -46,24 +46,22 @@
 //     }
 // }
 
-using Microsoft.EntityFrameworkCore;
-using RecruitmentSystemAPI.Data;
 using RecruitmentSystemAPI.DTOs;
 using RecruitmentSystemAPI.Models;
+using RecruitmentSystemAPI.Repositories.Interfaces;
 using RecruitmentSystemAPI.Services.Interfaces;
 
 namespace RecruitmentSystemAPI.Services.Implementations;
 
 public class JobService : IJobService
 {
-    private readonly AppDbContext _db;
-    public JobService(AppDbContext db) => _db = db;
+    private readonly IJobRepository _jobRepo;
 
-    public IEnumerable<Job> GetAll() =>
-        _db.Jobs.Include(j => j.RequiredSkills).OrderByDescending(j => j.CreatedAt).AsNoTracking().ToList();
+    public JobService(IJobRepository jobRepo) => _jobRepo = jobRepo;
 
-    public Job? Get(int id) =>
-        _db.Jobs.Include(j => j.RequiredSkills).AsNoTracking().FirstOrDefault(j => j.Id == id);
+    public IEnumerable<Job> GetAll() => _jobRepo.GetAll();
+
+    public Job? Get(int id) => _jobRepo.Get(id);
 
     public Job Create(CreateJobRequest dto)
     {
@@ -76,37 +74,33 @@ public class JobService : IJobService
                 Name = s.Name, MinYears = s.MinYears
             }).ToList()
         };
-        _db.Jobs.Add(job);
-        _db.SaveChanges();
+        _jobRepo.Add(job);
         return job;
     }
 
     public bool Update(int id, UpdateJobRequest dto)
     {
-        var job = _db.Jobs.Include(j => j.RequiredSkills).FirstOrDefault(j => j.Id == id);
+        var job = _jobRepo.GetForUpdate(id);
         if (job is null) return false;
 
         job.Title = dto.Title;
         job.Description = dto.Description;
         job.IsOpen = dto.IsOpen;
 
-        // Replace skill list (simple approach)
-        _db.RequiredSkills.RemoveRange(job.RequiredSkills);
-        job.RequiredSkills = (dto.RequiredSkills ?? new()).Select(s => new RequiredSkill
+        var newSkills = (dto.RequiredSkills ?? new()).Select(s => new RequiredSkill
         {
             Name = s.Name, MinYears = s.MinYears, JobId = id
         }).ToList();
 
-        _db.SaveChanges();
+        _jobRepo.UpdateSkillsAndSave(job, newSkills);
         return true;
     }
 
     public bool Delete(int id)
     {
-        var job = _db.Jobs.Find(id);
+        var job = _jobRepo.GetForUpdate(id);
         if (job is null) return false;
-        _db.Jobs.Remove(job);
-        _db.SaveChanges();
+        _jobRepo.Delete(job);
         return true;
     }
 }

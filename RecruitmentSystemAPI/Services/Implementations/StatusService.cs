@@ -1,19 +1,23 @@
-using RecruitmentSystemAPI.Data;
 using RecruitmentSystemAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using RecruitmentSystemAPI.Services.Interfaces;
+using RecruitmentSystemAPI.Repositories.Interfaces;
 
 namespace RecruitmentSystemAPI.Services.Implementations;
 
 public class StatusService
 {
-    private readonly AppDbContext _db;
+    private readonly IStatusRepository _statusRepo;
+    private readonly ICandidateRepository _candidateRepo;
     private readonly INotificationService _notify;
+    private readonly IAuthRepository _authRepo;
 
-    public StatusService(AppDbContext db, INotificationService notify)
+    public StatusService(IStatusRepository statusRepo, ICandidateRepository candidateRepo, INotificationService notify, IAuthRepository authRepo)
     {
-        _db = db;
+        _statusRepo = statusRepo;
+        _candidateRepo = candidateRepo;
         _notify = notify;
+        _authRepo = authRepo;
     }
 
     public async Task ChangeCandidateStatusAsync(
@@ -32,8 +36,7 @@ public class StatusService
             ChangedAt = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified)
         };
 
-        _db.StatusHistories.Add(history);
-        await _db.SaveChangesAsync();
+        await _statusRepo.AddStatusHistoryAsync(history);
 
         var message = $"Candidate {candidateId}: {oldStatus} → {newStatus}";
 
@@ -44,10 +47,10 @@ public class StatusService
         // Also attempt to notify the candidate user (if an account exists)
         try
         {
-            var candidate = await _db.Candidates.FindAsync(candidateId);
+            var candidate = await _candidateRepo.GetByIdAsync(candidateId);
             if (candidate != null)
             {
-                var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == candidate.Email);
+                var user = await _authRepo.GetUserByEmailWithRolesAsync(candidate.Email);
                 if (user != null)
                 {
                     await _notify.SendToUserEmailAsync(user.Email, message);

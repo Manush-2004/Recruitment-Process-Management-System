@@ -1,27 +1,24 @@
-using RecruitmentSystemAPI.Data;
 using RecruitmentSystemAPI.DTOs;
 using RecruitmentSystemAPI.Models;
+using RecruitmentSystemAPI.Repositories.Interfaces;
 using RecruitmentSystemAPI.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace RecruitmentSystemAPI.Services.Implementations;
 
 public class ScreeningService : IScreeningService
 {
-    private readonly AppDbContext _db;
+    private readonly IScreeningRepository _screeningRepo;
     private readonly StatusService _statusService;
 
-    public ScreeningService(AppDbContext db, StatusService statusService)
+    public ScreeningService(IScreeningRepository screeningRepo, StatusService statusService)
     {
-        _db = db;
+        _screeningRepo = screeningRepo;
         _statusService = statusService;
     }
 
     public async Task<bool> AlreadyScreenedAsync(int candidateId, int jobId)
     {
-        // Consider a candidate already screened only if there exists a completed screening (i.e., ScreenedAt set or Status != "Pending")
-        return await _db.Screenings
-            .AnyAsync(s => s.CandidateId == candidateId && s.JobId == jobId && (s.ScreenedAt != null || s.Status != "Pending"));
+        return await _screeningRepo.HasCompletedScreeningAsync(candidateId, jobId);
     }
 
     public async Task<Screening> ScreenCandidateAsync(ScreeningRequest request)
@@ -31,7 +28,7 @@ public class ScreeningService : IScreeningService
             throw new Exception("Candidate already screened for this job.");
 
         // Check for existing pending assignment for this candidate/job and reviewer (reviewer-based flow)
-        var existingPending = await _db.Screenings.FirstOrDefaultAsync(s => s.CandidateId == request.CandidateId && s.JobId == request.JobId && s.Status == "Pending" && s.ReviewerName == request.ReviewerName);
+        var existingPending = await _screeningRepo.GetPendingScreeningAsync(request.CandidateId, request.JobId, request.ReviewerName);
 
         if (existingPending != null)
         {
@@ -41,16 +38,14 @@ public class ScreeningService : IScreeningService
             existingPending.ScreenedAt = DateTime.UtcNow;
 
             // Replace skills: remove existing and add new ones
-            var existingSkills = _db.ScreeningSkills.Where(ss => ss.ScreeningId == existingPending.Id);
-            _db.ScreeningSkills.RemoveRange(existingSkills);
-            existingPending.Skills = (request.Skills ?? new List<ScreeningSkillRequest>()).Select(s => new ScreeningSkill
+            var newSkills = (request.Skills ?? new List<ScreeningSkillRequest>()).Select(s => new ScreeningSkill
             {
                 SkillName = s.SkillName,
                 YearsOfExperience = s.YearsOfExperience,
                 IsApproved = s.IsApproved
             }).ToList();
-
-            await _db.SaveChangesAsync();
+            
+            await _screeningRepo.UpdateScreeningAndSkillsAsync(existingPending, newSkills);
 
             // Only change candidate status if a non-Pending status was provided
             if (!string.IsNullOrEmpty(request.Status) && request.Status != "Pending")
@@ -76,8 +71,8 @@ public class ScreeningService : IScreeningService
             ScreenedAt = (request.Status != null && request.Status != "Pending") ? DateTime.UtcNow : (DateTime?)null
         };
 
-        _db.Screenings.Add(screening);
-        await _db.SaveChangesAsync();
+        await _screeningRepo.AddScreeningAsync(screening);
+        
         if (screening.ScreenedAt != null)
         {
             await _statusService.ChangeCandidateStatusAsync(
@@ -92,43 +87,23 @@ public class ScreeningService : IScreeningService
 
     public async Task<IEnumerable<Screening>> GetAssignedForReviewerAsync(string reviewerName)
     {
-        return await _db.Screenings
-            .Where(s => s.ReviewerName == reviewerName && s.Status == "Pending")
-            .Include(s => s.Candidate)
-            .Include(s => s.Job)
-            .Include(s => s.Skills)
-            .OrderBy(s => s.ScreenedAt)
-            .AsNoTracking()
-            .ToListAsync();
+        return await _screeningRepo.GetAssignedForReviewerAsync(reviewerName);
     }
 
     public async Task<IEnumerable<Screening>> GetHistoryForReviewerAsync(string reviewerName)
     {
-        return await _db.Screenings
-            .Where(s => s.ReviewerName == reviewerName && s.ScreenedAt != null)
-            .Include(s => s.Candidate)
-            .Include(s => s.Job)
-            .Include(s => s.Skills)
-            .OrderByDescending(s => s.ScreenedAt)
-            .AsNoTracking()
-            .ToListAsync();
+        return await _screeningRepo.GetHistoryForReviewerAsync(reviewerName);
     }
 
     public async Task<IEnumerable<Screening>> GetForCandidateAsync(int candidateId)
     {
-        return await _db.Screenings
-            .Where(s => s.CandidateId == candidateId)
-            .Include(s => s.Job)
-            .Include(s => s.Skills)
-            .OrderByDescending(s => s.ScreenedAt)
-            .AsNoTracking()
-            .ToListAsync();
+        return await _screeningRepo.GetForCandidateAsync(candidateId);
     }
 
     // Allow updating an existing screening's status/comments/skills. Reviewers can only update their own screenings (enforced by controller/service). Recruiters/Admins may update any screening.
     public async Task<Screening> UpdateScreeningAsync(int screeningId, UpdateScreeningRequest request, string? callerName = null, bool asReviewer = false)
     {
-        var screening = await _db.Screenings.Include(s => s.Skills).FirstOrDefaultAsync(s => s.Id == screeningId);
+        var screening = await _screeningRepo.GetByIdWithSkillsAsync(screeningId);
         if (screening == null) throw new KeyNotFoundException("Screening not found");
 
         // If caller is a reviewer, ensure they are the assigned reviewer
@@ -151,12 +126,11 @@ public class ScreeningService : IScreeningService
 
         if (request.Comments != null) screening.Comments = request.Comments;
 
+        var newSkills = screening.Skills.ToList(); // preserve existing if not provided
         if (request.Skills != null)
         {
             // replace skills
-            var existing = _db.ScreeningSkills.Where(ss => ss.ScreeningId == screening.Id);
-            _db.ScreeningSkills.RemoveRange(existing);
-            screening.Skills = request.Skills.Select(s => new ScreeningSkill
+            newSkills = request.Skills.Select(s => new ScreeningSkill
             {
                 SkillName = s.SkillName,
                 YearsOfExperience = s.YearsOfExperience,
@@ -164,7 +138,7 @@ public class ScreeningService : IScreeningService
             }).ToList();
         }
 
-        await _db.SaveChangesAsync();
+        await _screeningRepo.UpdateScreeningAndSkillsAsync(screening, newSkills);
 
         if (statusChanged && screening.ScreenedAt != null)
         {
