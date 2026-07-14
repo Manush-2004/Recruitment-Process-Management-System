@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Exceptions;
 using RecruitmentSystemAPI.Services.Interfaces;
 
 [ApiController]
@@ -34,9 +35,9 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Me()
     {
         var email = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
-        if (string.IsNullOrWhiteSpace(email)) return Unauthorized();
+        if (string.IsNullOrWhiteSpace(email)) throw new UnauthorizedException("Unauthorized");
         var user = await _service.GetUserByEmailAsync(email);
-        if (user == null) return NotFound();
+        if (user == null) throw new NotFoundException("User not found");
         var roles = user.UserRoles.Select(ur => ur.Role!.Name).ToList();
         return Ok(new { id = user.Id, fullName = user.FullName, email = user.Email, roles });
     }

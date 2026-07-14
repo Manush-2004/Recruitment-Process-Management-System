@@ -2,6 +2,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Exceptions;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.Repositories.Interfaces;
 
@@ -25,7 +26,7 @@ public class OfferService
     public async Task<Offer> CreateOfferAsync(OfferRequest req)
     {
         var candidate = await _candidateRepo.GetByIdAsync(req.CandidateId)
-            ?? throw new Exception("Candidate not found");
+            ?? throw new NotFoundException("Candidate not found");
 
         var fileName = $"Offer_{candidate.FullName.Replace(" ", "_")}.pdf";
         var path = Path.Combine(_env.WebRootPath!, "offers", fileName);

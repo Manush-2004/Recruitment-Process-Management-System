@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using RecruitmentSystemAPI.Exceptions;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.DTOs;
 using RecruitmentSystemAPI.Services.Interfaces;
@@ -16,7 +17,8 @@ public class JobsController(IJobService service) : ControllerBase
     public ActionResult<Job> Get(int id)
     {
         var job = service.Get(id);
-        return job is null ? NotFound() : Ok(job);
+        if (job is null) throw new NotFoundException("Job not found");
+        return Ok(job);
     }
 
     [HttpPost]
@@ -30,14 +32,16 @@ public class JobsController(IJobService service) : ControllerBase
     public IActionResult Update(int id, [FromBody] UpdateJobRequest dto)
     {
         var ok = service.Update(id, dto);
-        return ok ? NoContent() : NotFound();
+        if (!ok) throw new NotFoundException("Job not found");
+        return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public IActionResult Delete(int id)
     {
         var ok = service.Delete(id);
-        return ok ? NoContent() : NotFound();
+        if (!ok) throw new NotFoundException("Job not found");
+        return NoContent();
     }
 }
 

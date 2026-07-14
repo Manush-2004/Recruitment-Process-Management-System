@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Exceptions;
 using RecruitmentSystemAPI.Services.Interfaces;
 
 [Authorize(Roles = "Admin")]
@@ -36,7 +37,7 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> UpdateUser(int id, UpdateUserRequest req)
     {
         var user = await _service.UpdateUserAsync(id, req.FullName, req.IsActive);
-        if (user == null) return NotFound();
+        if (user == null) throw new NotFoundException("User not found");
         return Ok(new { id = user.Id, fullName = user.FullName, email = user.Email });
     }
 

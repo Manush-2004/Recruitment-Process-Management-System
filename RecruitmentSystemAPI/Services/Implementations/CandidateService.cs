@@ -1,5 +1,6 @@
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Exceptions;
 using Microsoft.AspNetCore.Http;
 using OfficeOpenXml;
 using RecruitmentSystemAPI.Services.Interfaces;
@@ -45,9 +46,9 @@ public class CandidateService : ICandidateService
         {
             // Prevent duplicate candidate or user
             if (await _candidateRepo.ExistsByEmailAsync(dto.Email))
-                throw new ArgumentException("User already exists");
+                throw new ConflictException("User already exists");
             if (await _authService.GetUserByEmailAsync(dto.Email) != null)
-                throw new ArgumentException("User already exists");
+                throw new ConflictException("User already exists");
 
             var candidate = new Candidate
             {
@@ -137,7 +138,7 @@ public class CandidateService : ICandidateService
                 {
                     // Log and continue — candidate record is still valid; caller may decide how to handle
                     _logger.LogWarning(ex, "Failed to create user for candidate {Email}: {Msg}", dto.Email, ex.Message);
-                    throw new ArgumentException("User already exists");
+                    throw new ConflictException("User already exists");
                 }
             }
 
@@ -185,7 +186,7 @@ public class CandidateService : ICandidateService
 
     public async Task<CandidateDocument> UploadDocumentAsync(int candidateId, IFormFile file, string? type = null, CancellationToken ct = default)
     {
-        if (file == null || file.Length == 0) throw new ArgumentException("File is required");
+        if (file == null || file.Length == 0) throw new BadRequestException("File is required");
 
         // If uploading a resume (type == "Resume"), remove previous resume docs
         if (!string.IsNullOrWhiteSpace(type) && string.Equals(type, "Resume", StringComparison.OrdinalIgnoreCase))
@@ -209,7 +210,7 @@ public class CandidateService : ICandidateService
             }
         }
         var candidate = await _candidateRepo.GetByIdAsync(candidateId);
-        if (candidate == null) throw new ArgumentException("Candidate not found");
+        if (candidate == null) throw new NotFoundException("Candidate not found");
 
         var uploadsRoot = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads", "documents", candidateId.ToString());
         Directory.CreateDirectory(uploadsRoot);
@@ -242,7 +243,7 @@ public class CandidateService : ICandidateService
     public async Task MoveCandidateToHrAsync(int candidateId, string actor)
     {
         var cand = await _candidateRepo.GetByIdAsync(candidateId);
-        if (cand == null) throw new ArgumentException("Candidate not found");
+        if (cand == null) throw new NotFoundException("Candidate not found");
 
         var latest = (await _statusRepo.GetStatusHistoryForCandidateAsync(candidateId))
             .FirstOrDefault()?.NewStatus;
@@ -254,7 +255,7 @@ public class CandidateService : ICandidateService
     public async Task AddSkillsForCandidateAsync(int candidateId, List<CandidateSkill> skills)
     {
         var candidate = await _candidateRepo.GetByIdWithSkillsAsync(candidateId);
-        if (candidate == null) throw new ArgumentException("Candidate not found");
+        if (candidate == null) throw new NotFoundException("Candidate not found");
 
         var newSkills = new List<CandidateSkill>();
         foreach (var sk in skills)
@@ -272,7 +273,7 @@ public class CandidateService : ICandidateService
     public async Task UpdateSkillsForCandidateAsync(int candidateId, List<CandidateSkill> skills)
     {
         var candidate = await _candidateRepo.GetByIdWithSkillsAsync(candidateId);
-        if (candidate == null) throw new ArgumentException("Candidate not found");
+        if (candidate == null) throw new NotFoundException("Candidate not found");
 
         await _candidateRepo.UpdateSkillsAsync(candidate, skills);
     }
@@ -280,14 +281,14 @@ public class CandidateService : ICandidateService
     public async Task RemoveSkillAsync(int candidateId, int skillId)
     {
         var skill = await _candidateRepo.GetSkillAsync(candidateId, skillId);
-        if (skill == null) throw new ArgumentException("Skill not found");
+        if (skill == null) throw new NotFoundException("Skill not found");
         await _candidateRepo.RemoveSkillAsync(skill);
     }
 
     public async Task<Candidate> UpdateCandidateAsync(int candidateId, UpdateCandidateRequest req)
     {
         var candidate = await _candidateRepo.GetByIdWithDetailsAsync(candidateId);
-        if (candidate == null) throw new ArgumentException("Candidate not found");
+        if (candidate == null) throw new NotFoundException("Candidate not found");
 
         // Only allow updating certain fields for now. Ignore nulls.
         if (req.Phone is not null)
@@ -313,7 +314,7 @@ public class CandidateService : ICandidateService
     public async Task<CandidateDocument> VerifyDocumentAsync(int candidateId, int documentId, bool verified)
     {
         var doc = await _candidateRepo.GetDocumentAsync(candidateId, documentId);
-        if (doc == null) throw new ArgumentException("Document not found");
+        if (doc == null) throw new NotFoundException("Document not found");
         doc.Verified = verified;
         await _candidateRepo.UpdateDocumentAsync(doc);
         return doc;

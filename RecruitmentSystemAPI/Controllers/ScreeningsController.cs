@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Exceptions;
 using RecruitmentSystemAPI.Services.Interfaces;
 using System.Security.Claims;
 
@@ -24,7 +25,7 @@ public class ScreeningsController : ControllerBase
     {
         var fullName = User.FindFirst("FullName")?.Value;
         var reviewer = fullName ?? User.FindFirst(ClaimTypes.Name)?.Value;
-        if (string.IsNullOrWhiteSpace(reviewer)) return Unauthorized();
+        if (string.IsNullOrWhiteSpace(reviewer)) throw new UnauthorizedException("Unauthorized");
         var list = await _service.GetAssignedForReviewerAsync(reviewer);
         return Ok(list);
     }
@@ -35,7 +36,7 @@ public class ScreeningsController : ControllerBase
     {
         var fullName = User.FindFirst("FullName")?.Value;
         var reviewer = fullName ?? User.FindFirst(ClaimTypes.Name)?.Value;
-        if (string.IsNullOrWhiteSpace(reviewer)) return Unauthorized();
+        if (string.IsNullOrWhiteSpace(reviewer)) throw new UnauthorizedException("Unauthorized");
         var list = await _service.GetHistoryForReviewerAsync(reviewer);
         return Ok(list);
     }
@@ -65,10 +66,10 @@ public class ScreeningsController : ControllerBase
 
         // Reviewers must provide Status and Skills when submitting screening
         if (string.IsNullOrEmpty(request.Status))
-            return BadRequest("Status is required for screening submission");
+            throw new BadRequestException("Status is required for screening submission");
 
         if (request.Skills == null)
-            return BadRequest("Skills are required for screening submission");
+            throw new BadRequestException("Skills are required for screening submission");
 
         var result = await _service.ScreenCandidateAsync(request);
         return Ok(result);
@@ -79,7 +80,7 @@ public class ScreeningsController : ControllerBase
     [Authorize(Roles = "Recruiter,Admin")]
     public async Task<IActionResult> Assign(ScreeningRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.ReviewerName)) return BadRequest("ReviewerName is required");
+        if (string.IsNullOrWhiteSpace(request.ReviewerName)) throw new BadRequestException("ReviewerName is required");
 
         // Set defaults for assignment workflow
         request.Status = request.Status ?? "Pending";

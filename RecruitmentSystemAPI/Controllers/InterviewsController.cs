@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Exceptions;
 using RecruitmentSystemAPI.Services.Interfaces;
 
 [ApiController]
@@ -42,7 +43,7 @@ public class InterviewsController : ControllerBase
     {
         var fullName = User.FindFirst("FullName")?.Value;
         var email = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
-        if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(fullName)) return Unauthorized();
+        if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(fullName)) throw new UnauthorizedException("Unauthorized");
 
         var all = await _service.GetAllAsync();
         var assigned = all.Where(i => i.Interviewers.Any(iv => iv.Email == email || iv.Name == fullName));
@@ -73,7 +74,7 @@ public class InterviewsController : ControllerBase
     {
         var all = await _service.GetAllAsync();
         var interview = all.FirstOrDefault(i => i.Id == id);
-        if (interview == null) return NotFound();
+        if (interview == null) throw new NotFoundException("Interview not found");
         return Ok(interview);
     }
 
@@ -92,15 +93,8 @@ public class InterviewsController : ControllerBase
     [HttpPost("{interviewId:int}/result")]
     public async Task<IActionResult> UpdateResult(int interviewId, [FromBody] UpdateInterviewResultRequest request)
     {
-        try
-        {
-            var actor = User.Identity?.Name ?? "HR";
-            var interview = await _service.UpdateInterviewResultAsync(interviewId, request.Result, actor);
-            return Ok(interview);
-        }
-        catch (ArgumentException ex)
-        {
-            return NotFound(ex.Message);
-        }
+        var actor = User.Identity?.Name ?? "HR";
+        var interview = await _service.UpdateInterviewResultAsync(interviewId, request.Result, actor);
+        return Ok(interview);
     }
 }

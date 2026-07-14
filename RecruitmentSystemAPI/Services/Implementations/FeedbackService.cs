@@ -1,4 +1,5 @@
 using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Exceptions;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.Repositories.Interfaces;
 using RecruitmentSystemAPI.Services.Interfaces;
@@ -31,10 +32,10 @@ public class FeedbackService : IFeedbackService
     public async Task SubmitFeedbackAsync(FeedbackRequest req)
     {
         if (await HasSubmittedAsync(req.InterviewId, req.InterviewerUserId))
-            throw new Exception("Feedback already submitted by this interviewer.");
+            throw new ConflictException("Feedback already submitted by this interviewer.");
 
         var interviewer = await _authRepo.GetUserByIdAsync(req.InterviewerUserId)
-            ?? throw new Exception("Interviewer not found");
+            ?? throw new NotFoundException("Interviewer not found");
         var feedback = new InterviewFeedback
         {
             InterviewId = req.InterviewId,
@@ -57,7 +58,7 @@ public class FeedbackService : IFeedbackService
         var feedbacks = (await _feedbackRepo.GetFeedbacksByInterviewIdAsync(interviewId)).ToList();
 
         if (!feedbacks.Any())
-            throw new Exception("No feedback available for this interview");
+            throw new BadRequestException("No feedback available for this interview");
 
         var firstInterview = feedbacks.First().Interview;
 
@@ -91,7 +92,7 @@ public class FeedbackService : IFeedbackService
         var feedbacks = (await _feedbackRepo.GetFeedbacksByCandidateAndJobAsync(candidateId, jobId)).ToList();
 
         if (!feedbacks.Any())
-            throw new Exception("No feedback available for this candidate and job");
+            throw new BadRequestException("No feedback available for this candidate and job");
 
         var summary = new InterviewFeedbackSummary
         {

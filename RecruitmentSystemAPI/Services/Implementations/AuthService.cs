@@ -1,6 +1,7 @@
 using BCrypt.Net;
 using Microsoft.IdentityModel.Tokens;
 using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Exceptions;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.Repositories.Interfaces;
 using RecruitmentSystemAPI.Services.Interfaces;
@@ -26,7 +27,7 @@ public class AuthService : IAuthService
     public async Task<string> RegisterAsync(RegisterRequest req)
     {
         if (await _authRepo.UserExistsAsync(req.Email))
-            throw new Exception("User already exists");
+            throw new ConflictException("User already exists");
 
         var role = await _authRepo.GetOrCreateRoleAsync(req.Role);
 
@@ -83,7 +84,7 @@ public class AuthService : IAuthService
         var user = await _authRepo.GetUserByEmailWithRolesAsync(req.Email);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
-            throw new Exception("Invalid credentials");
+            throw new UnauthorizedException("Invalid credentials");
 
         return GenerateToken(user);
     }

@@ -1,5 +1,3 @@
-using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using RecruitmentSystemAPI.Data;
 using RecruitmentSystemAPI.Models;
@@ -7,12 +5,12 @@ using RecruitmentSystemAPI.Services.Interfaces;
 using RecruitmentSystemAPI.Services.Implementations;
 using RecruitmentSystemAPI.Repositories.Interfaces;
 using RecruitmentSystemAPI.Repositories.Implementations;
-using RecruitmentSystemAPI.Validators;
 using OfficeOpenXml;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using RecruitmentSystemAPI.Hubs;
+using RecruitmentSystemAPI.Exceptions;
 
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
@@ -22,6 +20,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug);
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 builder.Services.AddControllers()
     .AddJsonOptions(opts =>
@@ -83,11 +84,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddScoped<IInterviewService, InterviewService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
-
-
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateJobRequestValidator>();
-
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<OfferService>();
 
@@ -138,6 +134,7 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "RecruitmentSystemAPI v1");
 });
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors(DevCors);
 app.UseStaticFiles();

@@ -1,4 +1,5 @@
 using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Exceptions;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.Repositories.Interfaces;
 using RecruitmentSystemAPI.Services.Interfaces;
@@ -94,7 +95,7 @@ public class InterviewService : IInterviewService
         var interview = await _interviewRepo.GetByIdWithCandidateAsync(interviewId);
 
         if (interview == null)
-            throw new ArgumentException("Interview not found");
+            throw new NotFoundException("Interview not found");
 
         interview.Result = result;
         interview.Status = "Completed";

@@ -1,4 +1,5 @@
 using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Exceptions;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.Repositories.Interfaces;
 using RecruitmentSystemAPI.Services.Interfaces;
@@ -25,7 +26,7 @@ public class ScreeningService : IScreeningService
     {
         // If there is a completed screening, block further submissions
         if (await AlreadyScreenedAsync(request.CandidateId, request.JobId))
-            throw new Exception("Candidate already screened for this job.");
+            throw new ConflictException("Candidate already screened for this job.");
 
         // Check for existing pending assignment for this candidate/job and reviewer (reviewer-based flow)
         var existingPending = await _screeningRepo.GetPendingScreeningAsync(request.CandidateId, request.JobId, request.ReviewerName);
@@ -104,11 +105,11 @@ public class ScreeningService : IScreeningService
     public async Task<Screening> UpdateScreeningAsync(int screeningId, UpdateScreeningRequest request, string? callerName = null, bool asReviewer = false)
     {
         var screening = await _screeningRepo.GetByIdWithSkillsAsync(screeningId);
-        if (screening == null) throw new KeyNotFoundException("Screening not found");
+        if (screening == null) throw new NotFoundException("Screening not found");
 
         // If caller is a reviewer, ensure they are the assigned reviewer
         if (asReviewer && !string.Equals(screening.ReviewerName, callerName, StringComparison.OrdinalIgnoreCase))
-            throw new UnauthorizedAccessException("Reviewer may only modify their own screenings");
+            throw new ForbiddenException("Reviewer may only modify their own screenings");
 
         var statusChanged = false;
 

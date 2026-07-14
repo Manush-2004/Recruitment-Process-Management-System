@@ -1,4 +1,5 @@
 using RecruitmentSystemAPI.DTOs;
+using RecruitmentSystemAPI.Exceptions;
 using RecruitmentSystemAPI.Models;
 using RecruitmentSystemAPI.Repositories.Interfaces;
 using RecruitmentSystemAPI.Services.Interfaces;
@@ -36,7 +37,7 @@ public class AdminService : IAdminService
         var token = await _authService.RegisterAsync(new RegisterRequest(fullName, email, password, role));
         // After registration, read created user
         var user = await _adminRepo.GetUserByEmailWithRolesAsync(email);
-        if (user == null) throw new Exception("User creation failed");
+        if (user == null) throw new BadRequestException("User creation failed");
 
         // If this is a Candidate user, ensure a Candidate profile exists and set phone if provided
         if (string.Equals(role, "Candidate", StringComparison.OrdinalIgnoreCase))
@@ -69,7 +70,7 @@ public class AdminService : IAdminService
     public async Task AssignRoleAsync(int userId, string roleName)
     {
         var user = await _adminRepo.GetUserWithRolesByIdAsync(userId);
-        if (user == null) throw new Exception("User not found");
+        if (user == null) throw new NotFoundException("User not found");
         var role = await _adminRepo.GetRoleByNameAsync(roleName) ?? new Role { Name = roleName };
         if (!user.UserRoles.Any(ur => ur.RoleId == role.Id || ur.Role?.Name == roleName))
         {
@@ -80,7 +81,7 @@ public class AdminService : IAdminService
     public async Task RemoveRoleAsync(int userId, string roleName)
     {
         var user = await _adminRepo.GetUserWithRolesByIdAsync(userId);
-        if (user == null) throw new Exception("User not found");
+        if (user == null) throw new NotFoundException("User not found");
         var ur = user.UserRoles.FirstOrDefault(x => x.Role!.Name == roleName);
         if (ur != null)
         {
