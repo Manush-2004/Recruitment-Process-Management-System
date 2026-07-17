@@ -17,8 +17,8 @@ const ScreeningHistory = () => {
         const h = await api.getHistory();
         setHistory(h || []);
       } catch (e) {
-        console.error("Failed to load history", e);
-      } finally {
+      console.error("API Error:", e);
+    } finally {
         setLoading(false);
       }
     };
@@ -83,8 +83,8 @@ const ScreeningHistory = () => {
                           const h2 = await api.getHistory();
                           setHistory(h2 || []);
                         } catch (e) {
-                          console.error("Update failed", e);
-                        }
+      console.error("API Error:", e);
+    }
                       }}
                       className="px-3 py-1 bg-blue-600 text-white rounded"
                     >

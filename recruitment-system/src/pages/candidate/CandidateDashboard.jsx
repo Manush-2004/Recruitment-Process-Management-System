@@ -27,9 +27,8 @@ const CandidateDashboard = () => {
         const hs = await getMyStatusHistory();
         setHistory(hs);
       } catch (e) {
-        // handle errors gracefully
-        console.error(e);
-      }
+      console.error("API Error:", e);
+    }
     })();
   }, []);
 

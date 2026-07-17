@@ -20,8 +20,7 @@ const CandidateDocuments = () => {
       await uploadDocument(f, type);
       setMessage("Uploaded successfully");
     } catch (err) {
-      console.error(err);
-      setError("Upload failed");
+      console.error("API Error:", err);
     } finally {
       setUploading(false);
     }

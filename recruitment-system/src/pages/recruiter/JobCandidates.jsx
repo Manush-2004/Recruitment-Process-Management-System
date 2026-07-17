@@ -26,8 +26,8 @@ const JobCandidates = () => {
         const cs = await getCandidatesForJob(parseInt(id, 10));
         setCandidates(cs || []);
       } catch (e) {
-        console.error("Failed to load job candidates", e);
-      } finally {
+      console.error("API Error:", e);
+    } finally {
         setLoading(false);
       }
     };

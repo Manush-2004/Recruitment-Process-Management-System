@@ -32,8 +32,8 @@ const FeedbackPage = () => {
         const done = await api.hasSubmittedFeedback(id);
         setAlready(done);
       } catch (err) {
-        console.error("Failed to load interview or check feedback", err);
-      }
+      console.error("API Error:", err);
+    }
     };
     load();
   }, [id]);
@@ -63,11 +63,7 @@ const FeedbackPage = () => {
       setAlready(true);
       navigate("/interviewer/dashboard");
     } catch (err) {
-      console.error("Failed to submit feedback", err);
-      alert(
-        "Failed to submit feedback: " +
-          (err.response?.data?.message || err.message),
-      );
+      console.error("API Error:", err);
     } finally {
       setSaving(false);
     }

@@ -15,9 +15,8 @@ const CandidateInterviews = () => {
         const ivs = await getMyInterviews();
         setInterviews(ivs);
       } catch (e) {
-        console.error(e);
-        setError("Failed to load interviews");
-      } finally {
+      console.error("API Error:", e);
+    } finally {
         setLoading(false);
       }
     })();

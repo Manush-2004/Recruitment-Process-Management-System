@@ -29,13 +29,13 @@ const UserManagement = () => {
         u.filter((x) => (x.roles || []).every((r) => allowedRoles.includes(r))),
       );
     } catch (err) {
-      console.error(err);
+      console.error("API Error:", err);
     }
     try {
       const r = await api.getRoles();
       setRoles(r.filter((rr) => allowedRoles.includes(rr)));
     } catch (err) {
-      console.error(err);
+      console.error("API Error:", err);
     }
   };
 
@@ -66,7 +66,7 @@ const UserManagement = () => {
       });
       await load();
     } catch (err) {
-      alert("Failed to create user: " + err.message);
+      console.error("API Error:", err);
     }
   };
 
@@ -76,7 +76,7 @@ const UserManagement = () => {
       await api.assignRole(id, role);
       await load();
     } catch (err) {
-      alert("Failed to assign role: " + err.message);
+      console.error("API Error:", err);
     }
   };
 
@@ -85,7 +85,7 @@ const UserManagement = () => {
       await api.removeRole(id, role);
       await load();
     } catch (err) {
-      alert("Failed to remove role: " + err.message);
+      console.error("API Error:", err);
     }
   };
 
@@ -155,8 +155,8 @@ const UserManagement = () => {
                     await load();
                     alert("Users cleared");
                   } catch (err) {
-                    alert("Failed to clear users: " + err.message);
-                  }
+      console.error("API Error:", err);
+    }
                 }}
                 className="px-3 py-2 bg-red-600 text-white rounded"
               >

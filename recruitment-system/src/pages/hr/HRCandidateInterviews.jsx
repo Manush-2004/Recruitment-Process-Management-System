@@ -35,8 +35,8 @@ const HRCandidateInterviews = () => {
           setSelectedJobId(candidateRes.data.candidateJobs[0].jobId.toString());
         }
       } catch (err) {
-        console.error("Failed to load data for candidate", err);
-      } finally {
+      console.error("API Error:", err);
+    } finally {
         setLoading(false);
       }
     };
@@ -112,14 +112,7 @@ const HRCandidateInterviews = () => {
       // Clear success message after 3 seconds
       setTimeout(() => setMessage(null), 3000);
     } catch (err) {
-      console.error("Failed to schedule interview", err);
-      console.error("Error response:", err.response?.data);
-      const errorMsg =
-        err.response?.data?.message ||
-        err.response?.data ||
-        "Failed to schedule interview. Please try again.";
-      setMessage(`Error: ${errorMsg}`);
-      alert(`Failed to schedule interview: ${errorMsg}`);
+      console.error("API Error:", err);
     }
   };
 
@@ -137,13 +130,7 @@ const HRCandidateInterviews = () => {
       // Clear message after 3 seconds
       setTimeout(() => setMessage(null), 3000);
     } catch (err) {
-      console.error("Failed to update interview result", err);
-      const errorMsg =
-        err.response?.data?.message ||
-        err.response?.data ||
-        "Failed to update result";
-      setMessage(`Error: ${errorMsg}`);
-      alert(`Failed to update result: ${errorMsg}`);
+      console.error("API Error:", err);
     }
   };
 

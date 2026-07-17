@@ -15,9 +15,8 @@ const CandidateOffers = () => {
         const of = await getMyOffers();
         setOffers(of);
       } catch (e) {
-        console.error(e);
-        setError("Failed to load offers");
-      } finally {
+      console.error("API Error:", e);
+    } finally {
         setLoading(false);
       }
     })();

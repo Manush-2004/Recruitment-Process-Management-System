@@ -39,17 +39,15 @@ const JobFeedback = () => {
                 hasFeedback: true,
               };
             } catch (err) {
-              // No feedback available yet
-              return { ...iv, feedbackSummary: null, hasFeedback: false };
-            }
+      console.error("API Error:", err);
+    }
           }),
         );
 
         setInterviews(interviewsWithFeedback);
       } catch (e) {
-        console.error("Failed to load job feedback", e);
-        setError("Failed to load feedback data");
-      } finally {
+      console.error("API Error:", e);
+    } finally {
         setLoading(false);
       }
     };

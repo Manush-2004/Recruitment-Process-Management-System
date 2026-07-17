@@ -24,13 +24,11 @@ const HRInterview = () => {
           const s = await api.getInterviewFeedbackSummary(id);
           setSummary(s);
         } catch (err) {
-          // No feedback yet - this is okay
-          console.log("No feedback available yet for this interview");
-        }
+      console.error("API Error:", err);
+    }
       } catch (err) {
-        console.error("Failed to load interview", err);
-        setError("Failed to load interview details");
-      } finally {
+      console.error("API Error:", err);
+    } finally {
         setLoading(false);
       }
     };

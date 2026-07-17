@@ -13,8 +13,8 @@ const FeedbackList = () => {
         const a = await api.getAssignedInterviews();
         setAssigned(a || []);
       } catch (err) {
-        console.error("Failed to load assigned interviews", err);
-      } finally {
+      console.error("API Error:", err);
+    } finally {
         setLoading(false);
       }
     };

@@ -1,4 +1,5 @@
 import axios from "axios";
+import handleApiError from "../utils/handleApiError";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -28,14 +29,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      if (typeof localStorage !== "undefined") localStorage.removeItem("token");
-      if (
-        typeof window !== "undefined" &&
-        typeof window.location !== "undefined"
-      )
-        window.location.href = "/login";
-    }
+    handleApiError(error);
     return Promise.reject(error);
   },
 );

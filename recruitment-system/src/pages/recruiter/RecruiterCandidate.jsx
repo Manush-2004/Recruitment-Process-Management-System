@@ -13,7 +13,9 @@ const RecruiterCandidate = () => {
       try {
         const res = await axiosInstance.get(`/api/candidates/${id}`);
         setCandidate(res.data);
-      } catch (e) { console.error('Failed to load candidate', e); }
+      } catch (e) {
+      console.error("API Error:", e);
+    }
       finally { setLoading(false); }
     };
     load();

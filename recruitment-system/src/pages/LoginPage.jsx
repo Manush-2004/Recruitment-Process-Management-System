@@ -153,15 +153,6 @@ const LoginPage = () => {
         </div>
         
         <form onSubmit={handleSubmit}>
-          {/* Error Message */}
-          {error && (
-            <div className="rounded-md mb-6 bg-ds-error-bg border border-ds-error-border p-3 mb-6">
-              <p className="text-[13px] text-ds-error font-medium">
-                {error}
-              </p>
-            </div>
-          )}
-
           {/* Form Fields - Design System: field spacing 12-16px */}
           <div className="flex flex-col gap-4">
             {/* Email Field */}

@@ -35,8 +35,8 @@ const OfferGeneration = () => {
           }
         }
       } catch (err) {
-        console.error("Failed to load data", err);
-      } finally {
+      console.error("API Error:", err);
+    } finally {
         setInitialLoading(false);
       }
     };
@@ -64,11 +64,7 @@ const OfferGeneration = () => {
       if (res.offerPdfPath) window.open(res.offerPdfPath, "_blank");
       navigate("/hr/dashboard");
     } catch (err) {
-      console.error("Failed to generate offer", err);
-      alert(
-        "Failed to generate offer: " +
-          (err.response?.data?.message || err.message),
-      );
+      console.error("API Error:", err);
     } finally {
       setLoading(false);
     }

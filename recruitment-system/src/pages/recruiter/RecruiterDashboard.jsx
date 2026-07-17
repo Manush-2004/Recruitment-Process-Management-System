@@ -18,8 +18,8 @@ const RecruiterDashboard = () => {
         const cs = await getCandidates();
         setCandidates(cs || []);
       } catch (e) {
-        console.error("Failed to load dashboard data", e);
-      } finally {
+      console.error("API Error:", e);
+    } finally {
         setLoading(false);
       }
     };

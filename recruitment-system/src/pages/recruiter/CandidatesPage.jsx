@@ -112,7 +112,7 @@ const CandidatesPage = () => {
       const cs = await getCandidates();
       setCandidates(cs || []);
     } catch (e) {
-      console.error("Failed to load candidates", e);
+      console.error("API Error:", e);
     } finally {
       setLoading(false);
     }
@@ -137,8 +137,7 @@ const CandidatesPage = () => {
       setCandidates(cs || []);
       setShowForm(false);
     } catch (e) {
-      console.error("Create failed", e);
-      alert("Create failed");
+      console.error("API Error:", e);
     }
   };
 
@@ -155,8 +154,7 @@ const CandidatesPage = () => {
       const cs = await getCandidates();
       setCandidates(cs || []);
     } catch (e) {
-      console.error("Bulk failed", e);
-      alert("Bulk upload failed");
+      console.error("API Error:", e);
     } finally {
       setUploading(false);
     }

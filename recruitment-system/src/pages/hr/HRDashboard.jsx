@@ -16,8 +16,8 @@ const HRDashboard = () => {
         setCandidates(c || []);
         setOffers(o || []);
       } catch (err) {
-        console.error("Failed to load HR data", err);
-      } finally {
+      console.error("API Error:", err);
+    } finally {
         setLoading(false);
       }
     };

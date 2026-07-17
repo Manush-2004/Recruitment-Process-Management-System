@@ -12,23 +12,23 @@ const Reports = () => {
       try {
         setPosition(await api.getPositionWise());
       } catch (err) {
-        console.error(err);
-      }
+      console.error("API Error:", err);
+    }
       try {
         setTech(await api.getTechnologyWise());
       } catch (err) {
-        console.error(err);
-      }
+      console.error("API Error:", err);
+    }
       try {
         setCandidateSummary(await api.getCandidateSummary());
       } catch (err) {
-        console.error(err);
-      }
+      console.error("API Error:", err);
+    }
       try {
         setInterviewerSummary(await api.getInterviewerSummary());
       } catch (err) {
-        console.error(err);
-      }
+      console.error("API Error:", err);
+    }
     };
     load();
   }, []);

@@ -35,8 +35,8 @@ const ScreeningPage = () => {
         setJobs(js || []);
         setReviewers(revs || []);
       } catch (e) {
-        console.error("Failed to load", e);
-      }
+      console.error("API Error:", e);
+    }
     };
     load();
   }, []);
@@ -54,7 +54,7 @@ const ScreeningPage = () => {
       if (jobId && jobs.length > 0)
         setSelectedJob(jobs.find((j) => j.id === parseInt(jobId, 10))); //
     } catch (e) {
-      // ignore in server-side or test environments
+      console.error("API Error:", e);
     }
   }, [candidates, jobs]);
 
@@ -66,8 +66,8 @@ const ScreeningPage = () => {
         const list = await reviewerApi.getForCandidate(selectedCandidate.id); //
         setCandidateScreenings(list || []);
       } catch (err) {
-        console.error("Failed to load candidate screenings", err);
-      }
+      console.error("API Error:", err);
+    }
     };
     load();
   }, [selectedCandidate]);
@@ -140,22 +140,14 @@ const ScreeningPage = () => {
           const list = await reviewerApi.getForCandidate(selectedCandidate.id);
           setCandidateScreenings(list || []);
         } catch (err) {
-          console.error("Failed to reload candidate screenings", err);
-        }
+      console.error("API Error:", err);
+    }
       }
       setMessage(
         assignToReviewer ? "Screening assigned" : "Screening submitted",
       );
     } catch (e) {
-      console.error("Screening failed", e, e.response?.data);
-      const serverMsg =
-        e?.response?.data &&
-        (typeof e.response.data === "string"
-          ? e.response.data
-          : e.response.data?.message || JSON.stringify(e.response.data));
-      setMessage(
-        serverMsg || "Screening failed: " + (e.message || "Unknown error"),
-      );
+      console.error("API Error:", e);
     }
   };
 

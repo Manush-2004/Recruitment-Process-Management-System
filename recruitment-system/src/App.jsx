@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -47,313 +49,316 @@ import Reports from "./pages/admin/Reports";
 
 function App() {
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
+    <>
+      <ToastContainer position="top-right" autoClose={1000} hideProgressBar={false} />
+      <Routes>
+        {/* Public routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
 
-      {/* Protected routes */}
-      <Route
-        path="/dashboard"
-        element={
-          // <ProtectedRoute>
-          <DashboardPage />
-          // </ProtectedRoute>
-        }
-      />
+        {/* Protected routes */}
+        <Route
+          path="/dashboard"
+          element={
+            // <ProtectedRoute>
+            <DashboardPage />
+            // </ProtectedRoute>
+          }
+        />
 
-      {/* Candidate-specific routes (protected by role) */}
-      <Route
-        path="/candidate/dashboard"
-        element={
-          <ProtectedRoute roles={["Candidate"]}>
-            <CandidateDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/candidate/profile"
-        element={
-          <ProtectedRoute roles={["Candidate"]}>
-            <CandidateProfile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/candidate/interviews"
-        element={
-          <ProtectedRoute roles={["Candidate"]}>
-            <CandidateInterviews />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/candidate/documents"
-        element={
-          <ProtectedRoute roles={["Candidate"]}>
-            <CandidateDocuments />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/candidate/offers"
-        element={
-          <ProtectedRoute roles={["Candidate"]}>
-            <CandidateOffers />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/candidate/notifications"
-        element={
-          <ProtectedRoute roles={["Candidate"]}>
-            <CandidateNotifications />
-          </ProtectedRoute>
-        }
-      />
+        {/* Candidate-specific routes (protected by role) */}
+        <Route
+          path="/candidate/dashboard"
+          element={
+            <ProtectedRoute roles={["Candidate"]}>
+              <CandidateDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/candidate/profile"
+          element={
+            <ProtectedRoute roles={["Candidate"]}>
+              <CandidateProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/candidate/interviews"
+          element={
+            <ProtectedRoute roles={["Candidate"]}>
+              <CandidateInterviews />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/candidate/documents"
+          element={
+            <ProtectedRoute roles={["Candidate"]}>
+              <CandidateDocuments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/candidate/offers"
+          element={
+            <ProtectedRoute roles={["Candidate"]}>
+              <CandidateOffers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/candidate/notifications"
+          element={
+            <ProtectedRoute roles={["Candidate"]}>
+              <CandidateNotifications />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Recruiter routes */}
-      <Route
-        path="/recruiter/dashboard"
-        element={
-          <ProtectedRoute roles={["Recruiter"]}>
-            <RecruiterDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recruiter/jobs"
-        element={
-          <ProtectedRoute roles={["Recruiter"]}>
-            <JobsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recruiter/job/:id/candidates"
-        element={
-          <ProtectedRoute roles={["Recruiter"]}>
-            <JobCandidates />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recruiter/job/:id/feedback"
-        element={
-          <ProtectedRoute roles={["Recruiter"]}>
-            <JobFeedback />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recruiter/candidates"
-        element={
-          <ProtectedRoute roles={["Recruiter"]}>
-            <CandidatesPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recruiter/screening"
-        element={
-          <ProtectedRoute roles={["Recruiter"]}>
-            <ScreeningPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recruiter/interviews"
-        element={
-          <ProtectedRoute roles={["Recruiter"]}>
-            <InterviewScheduling />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recruiter/offers"
-        element={
-          <ProtectedRoute roles={["Recruiter"]}>
-            <OfferManagement />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recruiter/candidate/:id"
-        element={
-          <ProtectedRoute roles={["Recruiter"]}>
-            <RecruiterCandidate />
-          </ProtectedRoute>
-        }
-      />
+        {/* Recruiter routes */}
+        <Route
+          path="/recruiter/dashboard"
+          element={
+            <ProtectedRoute roles={["Recruiter"]}>
+              <RecruiterDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recruiter/jobs"
+          element={
+            <ProtectedRoute roles={["Recruiter"]}>
+              <JobsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recruiter/job/:id/candidates"
+          element={
+            <ProtectedRoute roles={["Recruiter"]}>
+              <JobCandidates />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recruiter/job/:id/feedback"
+          element={
+            <ProtectedRoute roles={["Recruiter"]}>
+              <JobFeedback />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recruiter/candidates"
+          element={
+            <ProtectedRoute roles={["Recruiter"]}>
+              <CandidatesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recruiter/screening"
+          element={
+            <ProtectedRoute roles={["Recruiter"]}>
+              <ScreeningPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recruiter/interviews"
+          element={
+            <ProtectedRoute roles={["Recruiter"]}>
+              <InterviewScheduling />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recruiter/offers"
+          element={
+            <ProtectedRoute roles={["Recruiter"]}>
+              <OfferManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recruiter/candidate/:id"
+          element={
+            <ProtectedRoute roles={["Recruiter"]}>
+              <RecruiterCandidate />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Reviewer routes */}
-      <Route
-        path="/reviewer/dashboard"
-        element={
-          <ProtectedRoute roles={["Reviewer"]}>
-            <ReviewerDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/reviewer/screening"
-        element={
-          <ProtectedRoute roles={["Reviewer"]}>
-            <ReviewerScreening />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/reviewer/history"
-        element={
-          <ProtectedRoute roles={["Reviewer"]}>
-            <ScreeningHistory />
-          </ProtectedRoute>
-        }
-      />
+        {/* Reviewer routes */}
+        <Route
+          path="/reviewer/dashboard"
+          element={
+            <ProtectedRoute roles={["Reviewer"]}>
+              <ReviewerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reviewer/screening"
+          element={
+            <ProtectedRoute roles={["Reviewer"]}>
+              <ReviewerScreening />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reviewer/history"
+          element={
+            <ProtectedRoute roles={["Reviewer"]}>
+              <ScreeningHistory />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Interviewer routes */}
-      <Route
-        path="/interviewer/dashboard"
-        element={
-          <ProtectedRoute roles={["Interviewer"]}>
-            <InterviewerDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/interviewer/interviews"
-        element={
-          <ProtectedRoute roles={["Interviewer"]}>
-            <InterviewerDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/interviewer/interview/:id"
-        element={
-          <ProtectedRoute roles={["Interviewer"]}>
-            <InterviewDetails />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/interviewer/feedback"
-        element={
-          <ProtectedRoute roles={["Interviewer"]}>
-            <FeedbackList />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/interviewer/feedback/:id"
-        element={
-          <ProtectedRoute roles={["Interviewer"]}>
-            <FeedbackPage />
-          </ProtectedRoute>
-        }
-      />
+        {/* Interviewer routes */}
+        <Route
+          path="/interviewer/dashboard"
+          element={
+            <ProtectedRoute roles={["Interviewer"]}>
+              <InterviewerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interviewer/interviews"
+          element={
+            <ProtectedRoute roles={["Interviewer"]}>
+              <InterviewerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interviewer/interview/:id"
+          element={
+            <ProtectedRoute roles={["Interviewer"]}>
+              <InterviewDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interviewer/feedback"
+          element={
+            <ProtectedRoute roles={["Interviewer"]}>
+              <FeedbackList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interviewer/feedback/:id"
+          element={
+            <ProtectedRoute roles={["Interviewer"]}>
+              <FeedbackPage />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* HR routes */}
-      <Route
-        path="/hr/dashboard"
-        element={
-          <ProtectedRoute roles={["HR"]}>
-            <HRDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/hr/interview/:id"
-        element={
-          <ProtectedRoute roles={["HR"]}>
-            <HRInterview />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/hr/candidate/:id/documents"
-        element={
-          <ProtectedRoute roles={["HR"]}>
-            <DocumentVerification />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/hr/candidate/:id/interviews"
-        element={
-          <ProtectedRoute roles={["HR"]}>
-            <HRCandidateInterviews />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/hr/offer/create"
-        element={
-          <ProtectedRoute roles={["HR"]}>
-            <OfferGeneration />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/hr/offers/:id"
-        element={
-          <ProtectedRoute roles={["HR"]}>
-            <OfferGeneration />
-          </ProtectedRoute>
-        }
-      />
+        {/* HR routes */}
+        <Route
+          path="/hr/dashboard"
+          element={
+            <ProtectedRoute roles={["HR"]}>
+              <HRDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/interview/:id"
+          element={
+            <ProtectedRoute roles={["HR"]}>
+              <HRInterview />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/candidate/:id/documents"
+          element={
+            <ProtectedRoute roles={["HR"]}>
+              <DocumentVerification />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/candidate/:id/interviews"
+          element={
+            <ProtectedRoute roles={["HR"]}>
+              <HRCandidateInterviews />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/offer/create"
+          element={
+            <ProtectedRoute roles={["HR"]}>
+              <OfferGeneration />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/offers/:id"
+          element={
+            <ProtectedRoute roles={["HR"]}>
+              <OfferGeneration />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Admin routes */}
-      <Route
-        path="/admin/dashboard"
-        element={
-          <ProtectedRoute roles={["Admin"]}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/users"
-        element={
-          <ProtectedRoute roles={["Admin"]}>
-            <UserManagement />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/roles"
-        element={
-          <ProtectedRoute roles={["Admin"]}>
-            <RoleManagement />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/reports"
-        element={
-          <ProtectedRoute roles={["Admin"]}>
-            <Reports />
-          </ProtectedRoute>
-        }
-      />
+        {/* Admin routes */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute roles={["Admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute roles={["Admin"]}>
+              <UserManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/roles"
+          element={
+            <ProtectedRoute roles={["Admin"]}>
+              <RoleManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/reports"
+          element={
+            <ProtectedRoute roles={["Admin"]}>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Notifications (any authenticated user) */}
-      <Route
-        path="/notifications"
-        element={
-          <ProtectedRoute>
-            <NotificationsPage />
-          </ProtectedRoute>
-        }
-      />
+        {/* Notifications (any authenticated user) */}
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* Default redirect */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-      {/* Catch all - redirect to dashboard */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
-    </Routes>
+        {/* Catch all - redirect to dashboard */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </>
   );
 }
 

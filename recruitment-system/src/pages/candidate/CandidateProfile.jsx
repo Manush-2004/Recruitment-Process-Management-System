@@ -27,9 +27,8 @@ const CandidateProfile = () => {
         const p = await getMe();
         setProfile(p);
       } catch (e) {
-        console.error(e);
-        setError("Failed to load profile");
-      } finally {
+      console.error("API Error:", e);
+    } finally {
         setLoading(false);
       }
     })();
@@ -45,8 +44,7 @@ const CandidateProfile = () => {
       const refreshed = await getMe();
       setProfile(refreshed);
     } catch (err) {
-      console.error(err);
-      setError("Upload failed");
+      console.error("API Error:", err);
     } finally {
       setUploading(false);
     }
@@ -108,9 +106,8 @@ const CandidateProfile = () => {
                       setProfile(refreshed);
                       setEditing(false);
                     } catch (err) {
-                      console.error(err);
-                      setError("Save failed");
-                    } finally {
+      console.error("API Error:", err);
+    } finally {
                       setSaving(false);
                     }
                   }}
@@ -213,9 +210,8 @@ const CandidateProfile = () => {
                             const refreshed = await getMe();
                             setProfile(refreshed);
                           } catch (err) {
-                            console.error("Delete skill failed", err);
-                            setError("Delete skill failed");
-                          }
+      console.error("API Error:", err);
+    }
                         }}
                         className="text-sm text-red-500"
                       >
@@ -251,9 +247,8 @@ const CandidateProfile = () => {
                         setProfile(refreshed);
                         setNewSkillText("");
                       } catch (err) {
-                        console.error("Add skills failed", err);
-                        setError("Add skills failed");
-                      }
+      console.error("API Error:", err);
+    }
                     }}
                     className="px-3 py-1 bg-green-600 text-white rounded"
                   >

@@ -40,13 +40,12 @@ const OfferManagement = () => {
             );
             setSummary(res.data);
           } catch (e) {
-            console.error("Fetch summary by candidate/job failed", e);
-            setMessage("Failed to fetch summary by candidate/job");
-          }
+      console.error("API Error:", e);
+    }
         }
       } catch (e) {
-        console.error("Failed to load candidates/jobs", e);
-      }
+      console.error("API Error:", e);
+    }
     };
     init();
   }, [location.search]);
@@ -60,12 +59,7 @@ const OfferManagement = () => {
       setSummary(res.data);
       setMessage(null);
     } catch (e) {
-      console.error("Fetch summary failed", e);
-      setMessage(
-        e.response?.status === 403
-          ? "You do not have permission to view interview summaries (HR only)."
-          : "Failed to fetch summary",
-      );
+      console.error("API Error:", e);
     }
   };
 
@@ -78,12 +72,7 @@ const OfferManagement = () => {
       setSummary(res.data);
       setMessage(null);
     } catch (e) {
-      console.error("Fetch summary failed", e);
-      setMessage(
-        e.response?.status === 403
-          ? "You do not have permission to view interview summaries (HR only)."
-          : "Failed to fetch summary by candidate/job",
-      );
+      console.error("API Error:", e);
     }
   };
 
@@ -101,12 +90,7 @@ const OfferManagement = () => {
         "Offer initiated — HR may need to finalize (if your account is allowed to create offers, this will complete).",
       );
     } catch (e) {
-      console.error("Initiate failed", e);
-      if (e.response?.status === 403)
-        setMessage(
-          "Only HR can create offers. Please request HR to initiate the offer.",
-        );
-      else setMessage("Failed to initiate offer");
+      console.error("API Error:", e);
     }
   };
 
@@ -118,8 +102,7 @@ const OfferManagement = () => {
       );
       setMessage("Candidate moved to HR stage");
     } catch (e) {
-      console.error("Move to HR failed", e);
-      setMessage("Failed to move candidate to HR");
+      console.error("API Error:", e);
     }
   };
 

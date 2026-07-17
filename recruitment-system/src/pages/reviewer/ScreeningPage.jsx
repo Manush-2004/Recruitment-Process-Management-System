@@ -50,8 +50,8 @@ const ScreeningPage = () => {
           setDuplicate(already);
         }
       } catch (e) {
-        console.error("Failed to load screening context", e);
-      } finally {
+      console.error("API Error:", e);
+    } finally {
         setLoading(false);
       }
     };
@@ -98,10 +98,7 @@ const ScreeningPage = () => {
       // go back to dashboard
       setTimeout(() => navigate("/reviewer/dashboard"), 800);
     } catch (err) {
-      console.error("Submit failed", err);
-      setMessage(
-        "Submit failed: " + (err.response?.data?.message || err.message),
-      );
+      console.error("API Error:", err);
     }
   };
 

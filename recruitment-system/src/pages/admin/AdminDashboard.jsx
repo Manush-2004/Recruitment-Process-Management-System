@@ -14,29 +14,29 @@ const AdminDashboard = () => {
         const users = await api.getUsers();
         setUsersCount(users.length);
       } catch (err) {
-        console.error("Failed to load users", err);
-      }
+      console.error("API Error:", err);
+    }
 
       try {
         const jobs = await fetch("/api/jobs").then((r) => r.json());
         setJobsCount(jobs?.length ?? 0);
       } catch (err) {
-        console.error("Failed to load jobs", err);
-      }
+      console.error("API Error:", err);
+    }
 
       try {
         const cs = await api.getCandidateSummary();
         setCandidateSummary(cs);
       } catch (err) {
-        console.error("Failed to load candidate summary", err);
-      }
+      console.error("API Error:", err);
+    }
 
       try {
         const pr = await api.getPositionWise();
         setPositionReport(pr);
       } catch (err) {
-        console.error("Failed to load position report", err);
-      }
+      console.error("API Error:", err);
+    }
     };
     load();
   }, []);

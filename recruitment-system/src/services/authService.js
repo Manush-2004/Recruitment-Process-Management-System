@@ -25,23 +25,9 @@ export const registerUser = async (registerData) => {
     const response = await axiosInstance.post("/api/auth/register", payload);
     return response.data.token;
   } catch (error) {
-    // Transform API errors to user-friendly messages
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
+      console.error("API Error:", error);
+      throw error;
     }
-    if (error.response?.status === 400 && error.response?.data) {
-      // Handle validation errors or custom error messages
-      const errorMessage = error.response.data.title || error.response.data;
-      throw new Error(errorMessage);
-    }
-    if (
-      error.message === "User already exists" ||
-      error.response?.data?.includes("already exists")
-    ) {
-      throw new Error("User already exists");
-    }
-    throw new Error("Registration failed. Please try again.");
-  }
 };
 
 /**
@@ -58,19 +44,7 @@ export const loginUser = async (loginData) => {
     });
     return response.data.token;
   } catch (error) {
-    // Transform API errors to user-friendly messages
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
+      console.error("API Error:", error);
+      throw error;
     }
-    if (error.response?.status === 400 || error.response?.status === 401) {
-      throw new Error("Invalid credentials");
-    }
-    if (
-      error.message?.includes("Invalid credentials") ||
-      error.response?.data?.includes("Invalid credentials")
-    ) {
-      throw new Error("Invalid credentials");
-    }
-    throw new Error("Login failed. Please try again.");
-  }
 };

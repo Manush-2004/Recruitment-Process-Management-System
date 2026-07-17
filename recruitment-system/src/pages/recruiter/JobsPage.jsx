@@ -21,9 +21,8 @@ const JobsPage = () => {
         const js = await getJobs();
         setJobs(js || []);
       } catch (e) {
-        console.error("Failed to load jobs", e);
-        setError("Failed to load jobs");
-      } finally {
+      console.error("API Error:", e);
+    } finally {
         setLoading(false);
       }
     };
@@ -47,8 +46,7 @@ const JobsPage = () => {
       setShowForm(false);
       setEditing(null);
     } catch (e) {
-      console.error("Save failed", e);
-      setError("Save failed");
+      console.error("API Error:", e);
     }
   };
 
@@ -63,8 +61,7 @@ const JobsPage = () => {
       await deleteJob(id);
       setJobs((s) => s.filter((j) => j.id !== id));
     } catch (e) {
-      console.error("Delete failed", e);
-      setError("Delete failed");
+      console.error("API Error:", e);
     }
   };
 

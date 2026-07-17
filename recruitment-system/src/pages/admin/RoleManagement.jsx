@@ -33,7 +33,7 @@ const RoleManagement = () => {
           .then((r) => r.filter((x) => allowedRoles.includes(x))),
       );
     } catch (err) {
-      alert("Failed to create role: " + err.message);
+      console.error("API Error:", err);
     }
   };
 

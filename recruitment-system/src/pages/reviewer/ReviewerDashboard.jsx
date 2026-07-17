@@ -16,8 +16,8 @@ const ReviewerDashboard = () => {
         setAssigned(a || []);
         setHistory(h || []);
       } catch (e) {
-        console.error("Failed to load reviewer dashboard", e);
-      } finally {
+      console.error("API Error:", e);
+    } finally {
         setLoading(false);
       }
     };

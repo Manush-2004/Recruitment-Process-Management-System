@@ -14,8 +14,8 @@ const DocumentVerification = () => {
         const d = await api.getCandidateDocuments(id);
         setDocs(d || []);
       } catch (err) {
-        console.error("Failed to load documents", err);
-      } finally {
+      console.error("API Error:", err);
+    } finally {
         setLoading(false);
       }
     };
@@ -27,8 +27,7 @@ const DocumentVerification = () => {
       await api.verifyDocument(id, docId, !cur);
       setDocs(docs.map((d) => (d.id === docId ? { ...d, verified: !cur } : d)));
     } catch (err) {
-      console.error("Failed to update document", err);
-      alert("Failed to update document");
+      console.error("API Error:", err);
     }
   };
 

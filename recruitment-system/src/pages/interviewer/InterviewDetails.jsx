@@ -14,8 +14,8 @@ const InterviewDetails = () => {
         const data = await api.getInterview(id);
         setInterview(data);
       } catch (err) {
-        console.error("Failed to load interview", err);
-      } finally {
+      console.error("API Error:", err);
+    } finally {
         setLoading(false);
       }
     };

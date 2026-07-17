@@ -33,8 +33,8 @@ const InterviewScheduling = () => {
         // initialize one interviewer select
         setInterviewers([{ userId: res?.[0]?.id ?? "" }]);
       } catch (e) {
-        console.error("Failed to load data", e);
-      }
+      console.error("API Error:", e);
+    }
     };
     load();
   }, []);
@@ -75,8 +75,7 @@ const InterviewScheduling = () => {
       const res = await scheduleInterview(payload);
       setMessage("Interview scheduled");
     } catch (e) {
-      console.error("Schedule failed", e);
-      setMessage("Schedule failed");
+      console.error("API Error:", e);
     }
   };
 

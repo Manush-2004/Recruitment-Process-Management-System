@@ -19,8 +19,8 @@ const ScreeningList = ({ candidateId, onUpdated }) => {
         if (!mounted) return;
         setList(l || []);
       } catch (e) {
-        console.error("Failed to load screenings for candidate", e);
-      }
+      console.error("API Error:", e);
+    }
     };
     load();
     return () => {
@@ -45,7 +45,7 @@ const ScreeningList = ({ candidateId, onUpdated }) => {
       const l = await reviewerApi.getForCandidate(candidateId);
       setList(l || []);
     } catch (e) {
-      console.error("Update failed", e);
+      console.error("API Error:", e);
     }
   };
 
